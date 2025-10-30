@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import imageProcessingRoutes from './routes/imageProcessing';
 
 // Load environment variables
 dotenv.config();
@@ -53,6 +54,9 @@ app.get('/health', (req: Request, res: Response<HealthResponse>) => {
     uptime: process.uptime()
   });
 });
+
+// API Routes
+app.use('/api/image', imageProcessingRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response<ErrorResponse>, next: NextFunction) => {

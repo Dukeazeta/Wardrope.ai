@@ -1,16 +1,75 @@
-# warddropeai
+# Wardrope.ai Flutter App
 
-A new Flutter project.
+A clean, modular Flutter application with an onboarding experience for AI-powered fashion recommendations.
 
-## Getting Started
+## Project Structure
 
-This project is a starting point for a Flutter application.
+```
+lib/
+├── main.dart                    # App entry point and routing configuration
+├── models/
+│   └── onboarding_data.dart     # Onboarding data models and constants
+├── screens/
+│   ├── onboarding_screen.dart   # Main onboarding screen controller
+│   └── home_screen.dart         # Home screen after onboarding
+└── widgets/
+    ├── onboarding_page.dart     # Individual onboarding page widget
+    └── page_indicator.dart      # Page indicator dots widget
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Modular Architecture**: Clean separation of concerns with dedicated folders for models, screens, and widgets
+- **Modern UI**: Material Design 3 with custom color scheme
+- **Smooth Animations**: Page transitions and interactive indicators
+- **Type Safety**: Fully typed Dart code with null safety
+- **Test Coverage**: Basic widget tests included
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Onboarding Flow
+
+1. Welcome to Wardrope.ai
+2. Smart Wardrobe Analysis
+3. Plan Your Looks
+4. Get Started
+
+## Key Components
+
+### OnboardingItem Model
+- `title`: String - Page title
+- `description`: String - Page description
+- `icon`: IconData - Icon representation
+- `color`: Color - Theme color for the page
+- `imageAsset`: String? - Optional image asset
+
+### Main Widgets
+
+- **OnboardingScreen**: Main controller with PageView
+- **OnboardingPageWidget**: Individual page content
+- **PageIndicatorWidget**: Animated page indicators
+
+## Running the App
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Testing
+
+```bash
+flutter test
+flutter analyze
+```
+
+## Dependencies
+
+- Flutter SDK
+- Material Design 3
+- No external dependencies required (uses built-in Flutter widgets)
+
+## Design System
+
+- **Primary Color**: #6C63FF (Deep Purple)
+- **Typography**: SF Pro Display
+- **Icons**: Material Icons
+- **Spacing**: Consistent 24px/40px spacing system
