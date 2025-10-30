@@ -172,8 +172,6 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
                 children: [
                   const SizedBox(height: 32),
                   _buildHeader(),
-                  const SizedBox(height: 24),
-                  _buildImagePreview(),
                 ],
               ),
             ),
@@ -188,7 +186,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
     return Column(
       children: [
         const Text(
-          'Take a full-body photo',
+          'Take a picture of yourself',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -199,7 +197,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'For the best results, stand in a well-lit area with a plain background. Make sure your entire body is visible.',
+          'A full-body photo would work best for optimal results. Stand in a well-lit area with a plain background.',
           style: TextStyle(
             fontSize: 16,
             color: Colors.grey,
@@ -207,15 +205,17 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           ),
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 24),
+        _buildDemoPhoto(),
       ],
     );
   }
 
-  Widget _buildImagePreview() {
+  Widget _buildDemoPhoto() {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 384),
-      height: 512,
+      constraints: const BoxConstraints(maxWidth: 300),
+      height: 200,
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
@@ -229,80 +229,43 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: _imageFile != null
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.file(
-                    _imageFile!,
-                    fit: BoxFit.cover,
-                  ),
-                  if (_isProcessing)
-                    Container(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'Processing your image...',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+        child: Image.asset(
+          'assets/Demo Photo.png',
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Demo photo',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
                       ),
                     ),
-                ],
-              )
-            : _buildPlaceholderContent(),
-      ),
-    );
-  }
-
-  Widget _buildPlaceholderContent() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.black.withValues(alpha: 0.02),
-            Colors.black.withValues(alpha: 0.05),
-          ],
-        ),
-      ),
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.camera_alt_outlined,
-              size: 64,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No photo selected',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
+  
   Widget _buildBottomActions() {
     return Container(
       decoration: BoxDecoration(
@@ -351,29 +314,52 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
+          Container(
             width: double.infinity,
             height: 48,
-            child: OutlinedButton(
-              onPressed: _isProcessing ? null : _pickFromGallery,
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.black.withValues(alpha: 0.1),
-                foregroundColor: Colors.black,
-                side: BorderSide(
-                  color: Colors.black,
-                  width: 1,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24), // Fully rounded
-                ),
-                disabledBackgroundColor: Colors.black.withValues(alpha: 0.05),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.black.withValues(alpha: 0.2),
+                width: 1,
               ),
-              child: const Text(
-                'Upload from Gallery',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _isProcessing ? null : _pickFromGallery,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.black,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: EdgeInsets.zero,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 20,
+                    color: Colors.black.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Upload from Gallery',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
