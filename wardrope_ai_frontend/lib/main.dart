@@ -3,6 +3,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/model_upload_screen.dart';
 import 'screens/wardrobe_screen.dart';
+import 'screens/add_clothing_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class WardropeApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/model-upload': (context) => const ModelUploadScreen(),
         '/wardrobe': (context) => const WardrobeScreen(),
+        '/add-clothing': (context) => const AddClothingScreen(),
       },
     );
   }
