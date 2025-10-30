@@ -145,7 +145,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pushReplacementNamed('/wardrobe'),
           icon: const Icon(
             Icons.close,
             color: Colors.black,
