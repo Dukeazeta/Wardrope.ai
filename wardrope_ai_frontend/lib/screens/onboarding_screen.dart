@@ -6,7 +6,7 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _navigateToHome(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/model-upload');
+    Navigator.of(context).pushReplacementNamed('/home');
   }
 
   @override
