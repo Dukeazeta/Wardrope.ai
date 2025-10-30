@@ -67,6 +67,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
       if (photo != null) {
         setState(() {
           _imageFile = File(photo.path);
+          _isProcessing = true;
         });
         await _processImage();
       }
@@ -85,6 +86,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
       if (image != null) {
         setState(() {
           _imageFile = File(image.path);
+          _isProcessing = true;
         });
         await _processImage();
       }
@@ -95,10 +97,6 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
 
   Future<void> _processImage() async {
     if (_imageFile == null) return;
-
-    setState(() {
-      _isProcessing = true;
-    });
 
     try {
       final result = await ImageService.processImage(_imageFile!);
@@ -228,50 +226,88 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
   }
 
   Widget _buildImageSection() {
-    if (_imageFile != null) {
-      return Container(
-        width: double.infinity,
-        height: 300,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.1),
-            width: 1,
-          ),
+    return Container(
+      width: double.infinity,
+      height: 250,
+      constraints: const BoxConstraints(maxWidth: 320),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.1),
+          width: 1,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_imageFile != null)
               Image.file(
                 _imageFile!,
                 fit: BoxFit.cover,
-              ),
-              if (_isProcessing)
-                Container(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  child: const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Processing your image...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+              )
+            else
+              Image.asset(
+                'assets/Add clothes 02.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.camera_alt_outlined,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Add clothes placeholder',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+            if (_isProcessing && _imageFile != null)
+              Container(
+                color: Colors.black.withValues(alpha: 0.7),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'Processing your image...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
+
+            if (_imageFile != null && !_isProcessing)
               Positioned(
                 top: 8,
                 right: 8,
@@ -296,51 +332,8 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      height: 200,
-      child: Image.asset(
-        'assets/Add clothes 02.png',
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.black.withValues(alpha: 0.1),
-                width: 1,
-              ),
-            ),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt_outlined,
-                    size: 48,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Add clothes placeholder',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }
