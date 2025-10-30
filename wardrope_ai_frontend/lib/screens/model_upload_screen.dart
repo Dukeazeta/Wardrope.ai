@@ -104,7 +104,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
 
           // Navigate to wardrobe screen with processed image data
           Navigator.of(context).pushReplacementNamed(
-            '/wardrobe',
+            '/home',
             arguments: {
               'processedImageUrl': processedImageUrl,
               'originalImagePath': imageFile.path,
@@ -145,7 +145,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pushReplacementNamed('/wardrobe'),
+          onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
           icon: const Icon(
             Icons.close,
             color: Colors.black,

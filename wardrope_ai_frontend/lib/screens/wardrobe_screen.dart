@@ -64,51 +64,43 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        title: const Text(
-          'My Wardrobe',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: _navigateToAddClothing,
-            icon: const Icon(
-              Icons.add,
-              color: Colors.black,
-              size: 24,
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (clothingItems.isNotEmpty) _buildCategorySelector(),
-          Expanded(
-            child: clothingItems.isEmpty
-                ? _buildEmptyState()
-                : _buildClothingGrid(),
-          ),
-        ],
-      ),
-      floatingActionButton: clothingItems.isEmpty
-          ? null
-          : FloatingActionButton(
-              onPressed: _navigateToAddClothing,
-              backgroundColor: Colors.black,
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 24,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  const Text(
+                    'My Wardrobe',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: _navigateToAddClothing,
+                    icon: const Icon(
+                      Icons.add,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
             ),
+            if (clothingItems.isNotEmpty) _buildCategorySelector(),
+            Expanded(
+              child: clothingItems.isEmpty
+                  ? _buildEmptyState()
+                  : _buildClothingGrid(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
