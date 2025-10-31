@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import imageProcessingRoutes from './routes/imageProcessing';
+import modelRoutes from './routes/model';
 
 // Load environment variables
 dotenv.config();
@@ -57,6 +58,7 @@ app.get('/health', (req: Request, res: Response<HealthResponse>) => {
 
 // API Routes
 app.use('/api/image', imageProcessingRoutes);
+app.use('/api/model', modelRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response<ErrorResponse>, next: NextFunction) => {

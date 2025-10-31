@@ -91,9 +91,6 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
       final result = await ImageService.processImage(imageFile);
 
       if (result['success'] == true) {
-        // Store the processed image data (in a real app, you'd save this to a database or storage)
-        final processedImageUrl = result['processedImageUrl'] as String?;
-
         // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -107,7 +104,9 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           await OnboardingService.markModelUploadCompleted();
 
           // Navigate to wardrobe screen with processed image data
-          Navigator.of(context).pushReplacementNamed('/home');
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
         }
       } else {
         throw Exception(result['message'] ?? 'Processing failed');
@@ -145,7 +144,9 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           onPressed: () async {
             // Mark model upload as completed (user is skipping)
             await OnboardingService.markModelUploadCompleted();
-            Navigator.of(context).pushReplacementNamed('/home');
+            if (context.mounted) {
+              Navigator.of(context).pushReplacementNamed('/home');
+            }
           },
           icon: const Icon(
             Icons.close,
