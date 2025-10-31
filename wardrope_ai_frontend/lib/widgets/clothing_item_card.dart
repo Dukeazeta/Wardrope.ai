@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/clothing_item.dart';
+import '../theme/app_theme.dart';
 
 class ClothingItemCard extends StatelessWidget {
   final ClothingItem item;
@@ -21,12 +23,12 @@ class ClothingItemCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4.h),
             ),
           ],
           border: Border.all(
@@ -43,13 +45,13 @@ class ClothingItemCard extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.05),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(AppTheme.radiusM),
                   ),
                 ),
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(AppTheme.radiusM),
                   ),
                   child: Image.network(
                     item.imageUrl,
@@ -57,10 +59,10 @@ class ClothingItemCard extends StatelessWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.black.withValues(alpha: 0.05),
-                        child: const Center(
+                        child: Center(
                           child: Icon(
                             Icons.image_outlined,
-                            size: 48,
+                            size: AppTheme.iconXL,
                             color: Colors.grey,
                           ),
                         ),
@@ -87,15 +89,15 @@ class ClothingItemCard extends StatelessWidget {
             Expanded(
               flex: 1,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(AppTheme.spacingM),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       item.name,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: AppTheme.titleMediumFontSize,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -105,7 +107,7 @@ class ClothingItemCard extends StatelessWidget {
                     Text(
                       item.category,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: AppTheme.bodySmallFontSize,
                         color: Colors.grey.shade600,
                         fontWeight: FontWeight.w400,
                       ),

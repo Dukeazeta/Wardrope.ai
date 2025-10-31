@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/clothing_item.dart';
 import '../services/image_service.dart';
+import '../theme/app_theme.dart';
 
 class AddClothingScreen extends StatefulWidget {
   const AddClothingScreen({super.key});
@@ -102,7 +104,8 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
       final result = await ImageService.processImage(_imageFile!);
 
       if (result['success'] == true) {
-        final processedImageUrl = result['processedImageUrl'] as String?;
+        // Image processed successfully, URL would be available if needed
+        // final processedImageUrl = result['processedImageUrl'] as String?;
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -175,17 +178,17 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(
+          icon: Icon(
             Icons.close,
             color: Colors.black,
-            size: 24,
+            size: AppTheme.iconM,
           ),
         ),
-        title: const Text(
+        title: Text(
           'Add Clothing',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18,
+            fontSize: AppTheme.titleLargeFontSize,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -193,11 +196,11 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
         actions: [
           TextButton(
             onPressed: _saveClothingItem,
-            child: const Text(
+            child: Text(
               'Save',
               style: TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: AppTheme.titleMediumFontSize,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -208,12 +211,12 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(AppTheme.spacingM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildImageSection(),
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppTheme.spacingL),
                   _buildCategorySection(),
                 ],
               ),
@@ -228,18 +231,18 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
   Widget _buildImageSection() {
     return Container(
       width: double.infinity,
-      height: 250,
-      constraints: const BoxConstraints(maxWidth: 320),
+      height: 250.h,
+      constraints: BoxConstraints(maxWidth: 320.w),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
           color: Colors.black.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusM),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -256,22 +259,22 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                   return Container(
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusM),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.camera_alt_outlined,
-                            size: 48,
+                            size: AppTheme.iconXL,
                             color: Colors.grey,
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: AppTheme.spacingS),
                           Text(
                             'Add clothes placeholder',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: AppTheme.bodyLargeFontSize,
                               fontWeight: FontWeight.w500,
                               color: Colors.grey,
                             ),
@@ -286,19 +289,19 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
             if (_isProcessing && _imageFile != null)
               Container(
                 color: Colors.black.withValues(alpha: 0.7),
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacingM),
                       Text(
                         'Processing your image...',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: AppTheme.bodyLargeFontSize,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -309,8 +312,8 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
 
             if (_imageFile != null && !_isProcessing)
               Positioned(
-                top: 8,
-                right: 8,
+                top: AppTheme.spacingS,
+                right: AppTheme.spacingS,
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
@@ -318,16 +321,16 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                     });
                   },
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 32.w,
+                    height: 32.w,
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close,
                       color: Colors.white,
-                      size: 18,
+                      size: AppTheme.iconS,
                     ),
                   ),
                 ),
@@ -343,23 +346,23 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Category',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: AppTheme.bodyLargeFontSize,
             fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacingS),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingM),
           decoration: BoxDecoration(
             border: Border.all(
               color: Colors.black.withValues(alpha: 0.2),
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radiusM),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
@@ -396,49 +399,49 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
           ),
         ),
       ),
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(AppTheme.spacingM),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: AppTheme.buttonHeightM,
             child: ElevatedButton(
               onPressed: _isProcessing ? null : _takePhoto,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                 ),
                 elevation: 0,
                 disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
               ),
               child: _isProcessing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Take Photo',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: AppTheme.bodyLargeFontSize,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacingM),
           Container(
             width: double.infinity,
-            height: 48,
+            height: AppTheme.buttonHeightM,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
               border: Border.all(
                 color: Colors.black.withValues(alpha: 0.2),
                 width: 1,
@@ -458,7 +461,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                 foregroundColor: Colors.black,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                 ),
                 padding: EdgeInsets.zero,
               ),
@@ -467,14 +470,14 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                 children: [
                   Icon(
                     Icons.photo_library_outlined,
-                    size: 20,
+                    size: AppTheme.iconS,
                     color: Colors.black.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: AppTheme.spacingS),
+                  Text(
                     'Upload from Gallery',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: AppTheme.bodyLargeFontSize,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

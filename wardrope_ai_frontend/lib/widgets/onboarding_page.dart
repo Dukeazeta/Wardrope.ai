@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/onboarding_data.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
 
 class OnboardingPageWidget extends StatelessWidget {
   final VoidCallback onGetStarted;
@@ -24,23 +25,23 @@ class OnboardingPageWidget extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingXL, vertical: AppTheme.spacingM),
           child: Column(
             children: [
-              const SizedBox(height: 20),
+              SizedBox(height: AppTheme.spacingL),
 
               // Logo and App Name
               _buildAppHeader(),
-              const SizedBox(height: 32),
+              SizedBox(height: AppTheme.spacingL),
 
               // Onboarding Image
               _buildOnboardingImage(),
 
-              const SizedBox(height: 40),
+              SizedBox(height: AppTheme.spacingXL),
 
               // Get Started Button
               _buildGetStartedButton(),
-              const SizedBox(height: 20),
+              SizedBox(height: AppTheme.spacingL),
             ],
           ),
         ),
@@ -54,35 +55,35 @@ class OnboardingPageWidget extends StatelessWidget {
       children: [
         // App Logo
         Container(
-          width: 120,
-          height: 120,
+          width: 120.w,
+          height: 120.w,
           decoration: BoxDecoration(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
-                offset: const Offset(0, 10),
+                offset: Offset(0, 10.h),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
             child: Image.asset(
               'assets/onboarding/Logo.png',
-              width: 120,
-              height: 120,
+              width: 120.w,
+              height: 120.w,
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
                   decoration: BoxDecoration(
                     color: Colors.black,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.style,
-                    size: 60,
+                    size: AppTheme.iconXL,
                     color: Colors.white,
                   ),
                 );
@@ -90,23 +91,23 @@ class OnboardingPageWidget extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: AppTheme.spacingL),
 
         // App Name
-        const Text(
+        Text(
           'Wardrope.ai',
           style: TextStyle(
-            fontSize: 36,
+            fontSize: AppTheme.displayLargeFontSize,
             fontWeight: FontWeight.bold,
             color: Colors.black,
             letterSpacing: -1,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: AppTheme.spacingS),
         Text(
           'AI-powered fashion companion',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: AppTheme.bodyLargeFontSize,
             color: Colors.grey.shade600,
             fontWeight: FontWeight.w400,
           ),
@@ -118,32 +119,32 @@ class OnboardingPageWidget extends StatelessWidget {
   Widget _buildOnboardingImage() {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxHeight: 300),
+      constraints: BoxConstraints(maxHeight: 300.h),
       child: Image.asset(
         'assets/onboarding/Onboarding.png',
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            height: 200,
+            height: 200.h,
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTheme.radiusL),
             ),
-            child: const Center(
+            child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.image_outlined,
-                    size: 48,
+                    size: AppTheme.iconXL,
                     color: Colors.grey,
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: AppTheme.spacingS),
                   Text(
                     'Onboarding image not found',
                     style: TextStyle(
                       color: Colors.grey,
-                      fontSize: 14,
+                      fontSize: AppTheme.bodyMediumFontSize,
                     ),
                   ),
                 ],
@@ -158,15 +159,15 @@ class OnboardingPageWidget extends StatelessWidget {
   Widget _buildGetStartedButton() {
     return Container(
       width: double.infinity,
-      height: 60,
+      height: AppTheme.buttonHeightL + 4.h,
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(30.r),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: Offset(0, 10.h),
           ),
         ],
       ),
@@ -177,14 +178,14 @@ class OnboardingPageWidget extends StatelessWidget {
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(30.r),
           ),
           padding: EdgeInsets.zero,
         ),
-        child: const Text(
+        child: Text(
           'Get Started',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: AppTheme.titleLargeFontSize,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,
           ),

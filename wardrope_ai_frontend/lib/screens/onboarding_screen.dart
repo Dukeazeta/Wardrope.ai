@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/onboarding_page.dart';
+import '../bloc/onboarding/onboarding_bloc.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
-  void _navigateToHome(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/home');
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => OnboardingBloc()..add(OnboardingStarted()),
+      child: const OnboardingView(),
+    );
   }
+}
+
+class OnboardingView extends StatelessWidget {
+  const OnboardingView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +28,18 @@ class OnboardingScreen extends StatelessWidget {
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
         ),
-        child: OnboardingPageWidget(
-          onGetStarted: () => _navigateToHome(context),
+        child: BlocListener<OnboardingBloc, OnboardingState>(
+          listener: (context, state) {
+            if (state.status == OnboardingStatus.completed ||
+                state.status == OnboardingStatus.skipped) {
+              Navigator.of(context).pushReplacementNamed('/home');
+            }
+          },
+          child: OnboardingPageWidget(
+            onGetStarted: () {
+              context.read<OnboardingBloc>().add(OnboardingCompleted());
+            },
+          ),
         ),
       ),
     );

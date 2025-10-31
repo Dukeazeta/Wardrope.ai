@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,39 +11,39 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Wardrope.ai',
           style: TextStyle(
-            color: Color(0xFF2D3436),
+            color: const Color(0xFF2D3436),
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            fontSize: AppTheme.displaySmallFontSize,
           ),
         ),
         centerTitle: true,
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.style,
-              size: 80,
-              color: Color(0xFF6C63FF),
+              size: AppTheme.iconXXL,
+              color: const Color(0xFF6C63FF),
             ),
-            SizedBox(height: 24),
+            SizedBox(height: AppTheme.spacingL),
             Text(
               'Welcome to Wardrope.ai',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: AppTheme.displaySmallFontSize,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2D3436),
+                color: const Color(0xFF2D3436),
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: AppTheme.spacingM),
             Text(
               'Your AI-powered fashion companion',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: AppTheme.bodyLargeFontSize,
                 color: Colors.grey,
               ),
             ),

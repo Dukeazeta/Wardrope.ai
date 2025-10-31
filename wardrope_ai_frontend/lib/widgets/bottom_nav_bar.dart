@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
 
 class BottomNavBar extends StatefulWidget {
   final int currentIndex;
@@ -42,32 +44,32 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 92, // Increased to accommodate larger navbar
+      height: 92.h, // Increased to accommodate larger navbar
       decoration: BoxDecoration(
         color: Colors.transparent,
       ),
       child: Center(
         child: Container(
           width: MediaQuery.of(context).size.width * 0.92,
-          height: 76,
+          height: 76.h,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(38), // Completely rounded - half of height
+            borderRadius: BorderRadius.circular(38.r), // Completely rounded - half of height
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 20,
-                offset: const Offset(0, 8),
+                offset: Offset(0, 8.h),
               ),
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 4,
-                offset: const Offset(0, 2),
+                offset: Offset(0, 2.h),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: _navigationItems.asMap().entries.map((entry) {
@@ -203,17 +205,17 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              height: 56,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
+              height: 56.h,
+              margin: EdgeInsets.symmetric(horizontal: 4.w),
               decoration: BoxDecoration(
                 color: widget.isSelected ? Colors.black : Colors.transparent,
-                borderRadius: BorderRadius.circular(20), // More rounded to match pill shape
+                borderRadius: BorderRadius.circular(20.r), // More rounded to match pill shape
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          offset: Offset(0, 2.h),
                         ),
                       ]
                     : null,
@@ -225,17 +227,17 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
                     scale: widget.isSelected ? _iconScaleAnimation.value : 1.0,
                     child: Icon(
                       widget.isSelected ? widget.activeIcon : widget.icon,
-                      size: 22,
+                      size: AppTheme.iconS,
                       color: widget.isSelected
                           ? Colors.white
                           : Colors.black.withValues(alpha: 0.6),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: AppTheme.spacingXS),
                   AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 200),
                     style: TextStyle(
-                      fontSize: widget.isSelected ? 11 : 10,
+                      fontSize: widget.isSelected ? 11.sp : 10.sp,
                       fontWeight: widget.isSelected
                           ? FontWeight.w600
                           : FontWeight.w500,

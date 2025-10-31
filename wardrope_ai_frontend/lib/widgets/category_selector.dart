@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../theme/app_theme.dart';
 
 class CategorySelector extends StatelessWidget {
   final List<String> categories;
@@ -15,18 +17,18 @@ class CategorySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      height: 60.h,
+      padding: EdgeInsets.symmetric(vertical: AppTheme.spacingS),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingM),
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = category == selectedCategory;
 
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: AppTheme.spacingS),
             child: FilterChip(
               label: Text(category),
               selected: isSelected,
@@ -38,9 +40,10 @@ class CategorySelector extends StatelessWidget {
               labelStyle: TextStyle(
                 color: isSelected ? Colors.white : Colors.black,
                 fontWeight: FontWeight.w500,
+                fontSize: AppTheme.bodyMediumFontSize,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 side: BorderSide(
                   color: Colors.black.withValues(alpha: 0.2),
                   width: 1,
