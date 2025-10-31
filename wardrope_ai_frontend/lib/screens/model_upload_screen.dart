@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/image_service.dart';
+import '../services/onboarding_service.dart';
 
 class ModelUploadScreen extends StatefulWidget {
   const ModelUploadScreen({super.key});
@@ -102,15 +103,11 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
             ),
           );
 
+          // Mark model upload as completed
+          await OnboardingService.markModelUploadCompleted();
+
           // Navigate to wardrobe screen with processed image data
-          Navigator.of(context).pushReplacementNamed(
-            '/home',
-            arguments: {
-              'processedImageUrl': processedImageUrl,
-              'originalImagePath': imageFile.path,
-              'metadata': result['metadata'],
-            },
-          );
+          Navigator.of(context).pushReplacementNamed('/home');
         }
       } else {
         throw Exception(result['message'] ?? 'Processing failed');
@@ -145,7 +142,11 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
+          onPressed: () async {
+            // Mark model upload as completed (user is skipping)
+            await OnboardingService.markModelUploadCompleted();
+            Navigator.of(context).pushReplacementNamed('/home');
+          },
           icon: const Icon(
             Icons.close,
             color: Colors.black,
