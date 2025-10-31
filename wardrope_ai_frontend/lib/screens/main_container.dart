@@ -68,10 +68,16 @@ class _MainContainerState extends State<MainContainer>
   void _initializeApp() {
     if (!_isInitialized) {
       _isInitialized = true;
-      // Initialize wardrobe bloc
+
+      // Ensure navigation starts at wardrobe (index 0)
+      if (context.read<NavigationBloc>().state.currentIndex != 0) {
+        context.read<NavigationBloc>().add(const NavigationTabChanged(0));
+      }
+
+      // Initialize wardrobe bloc with proper loading
       context.read<WardrobeBloc>().add(WardrobeLoadItems());
 
-      // Trigger a rebuild to ensure the wardrobe screen is properly loaded
+      // Force a rebuild to ensure the wardrobe screen is properly loaded
       if (mounted) {
         setState(() {});
       }

@@ -32,7 +32,7 @@ class OnboardingView extends StatelessWidget {
           listener: (context, state) {
             if (state.status == OnboardingStatus.completed ||
                 state.status == OnboardingStatus.skipped) {
-              Navigator.of(context).pushReplacementNamed('/home');
+              Navigator.of(context).pushReplacementNamed('/model');
             }
           },
           child: OnboardingPageWidget(

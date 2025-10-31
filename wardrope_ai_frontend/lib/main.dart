@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_container.dart';
+import 'screens/model_upload_screen.dart';
 import 'bloc/app_bloc.dart';
 import 'bloc/onboarding/onboarding_bloc.dart';
 import 'services/onboarding_service.dart';
@@ -24,10 +25,14 @@ class WardropeApp extends StatelessWidget {
         minTextAdapt: true,
         splitScreenMode: true,
         builder: (context, child) {
-          return const MaterialApp(
+          return MaterialApp(
             title: 'Wardrope.ai',
             debugShowCheckedModeBanner: false,
-            home: AppInitializer(),
+            home: const AppInitializer(),
+            routes: {
+              '/home': (context) => const MainContainer(),
+              '/model': (context) => const ModelUploadScreen(),
+            },
           );
         },
       ),
@@ -53,6 +58,7 @@ class _AppInitializerState extends State<AppInitializer> {
   void _navigateToNextScreen() async {
     // Check if this is the first launch
     final isFirstLaunch = await OnboardingService.isFirstLaunch();
+    final isModelUploadCompleted = await OnboardingService.isModelUploadCompleted();
 
     if (mounted) {
       if (isFirstLaunch) {
@@ -61,6 +67,8 @@ class _AppInitializerState extends State<AppInitializer> {
             builder: (context) => const OnboardingWrapper(),
           ),
         );
+      } else if (!isModelUploadCompleted) {
+        Navigator.of(context).pushReplacementNamed('/model');
       } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
