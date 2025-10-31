@@ -22,22 +22,18 @@ class _BottomNavBarState extends State<BottomNavBar> {
     NavigationItem(
       icon: Icons.checkroom_outlined,
       activeIcon: Icons.checkroom,
-      label: 'Wardrobe',
     ),
     NavigationItem(
       icon: Icons.person_outline,
       activeIcon: Icons.person,
-      label: 'Model',
     ),
     NavigationItem(
       icon: Icons.auto_awesome_outlined,
       activeIcon: Icons.auto_awesome,
-      label: 'AI Stylist',
     ),
     NavigationItem(
       icon: Icons.account_circle_outlined,
       activeIcon: Icons.account_circle,
-      label: 'Profile',
     ),
   ];
 
@@ -54,7 +50,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           height: 76.h,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(38.r), // Completely rounded - half of height
+            borderRadius: BorderRadius.circular(20.r), // Less rounded - subtle curve
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -82,7 +78,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
                     isSelected: isActive,
                     icon: item.icon,
                     activeIcon: item.activeIcon,
-                    label: item.label,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       widget.onTap(index);
@@ -101,12 +96,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
 class NavigationItem {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
 
   NavigationItem({
     required this.icon,
     required this.activeIcon,
-    required this.label,
   });
 }
 
@@ -114,14 +107,12 @@ class _AnimatedNavItem extends StatefulWidget {
   final bool isSelected;
   final IconData icon;
   final IconData activeIcon;
-  final String label;
   final VoidCallback onTap;
 
   const _AnimatedNavItem({
     required this.isSelected,
     required this.icon,
     required this.activeIcon,
-    required this.label,
     required this.onTap,
   });
 
@@ -220,34 +211,17 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
                       ]
                     : null,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Transform.scale(
-                    scale: widget.isSelected ? _iconScaleAnimation.value : 1.0,
-                    child: Icon(
-                      widget.isSelected ? widget.activeIcon : widget.icon,
-                      size: AppTheme.iconS,
-                      color: widget.isSelected
-                          ? Colors.white
-                          : Colors.black.withValues(alpha: 0.6),
-                    ),
+              child: Center(
+                child: Transform.scale(
+                  scale: widget.isSelected ? _iconScaleAnimation.value : 1.0,
+                  child: Icon(
+                    widget.isSelected ? widget.activeIcon : widget.icon,
+                    size: 24.w,
+                    color: widget.isSelected
+                        ? Colors.white
+                        : Colors.black.withValues(alpha: 0.6),
                   ),
-                  SizedBox(height: AppTheme.spacingXS),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    style: TextStyle(
-                      fontSize: widget.isSelected ? 11.sp : 10.sp,
-                      fontWeight: widget.isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                      color: widget.isSelected
-                          ? Colors.white
-                          : Colors.black.withValues(alpha: 0.6),
-                    ),
-                    child: Text(widget.label),
-                  ),
-                ],
+                ),
               ),
             ),
           );

@@ -33,15 +33,8 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   void initState() {
     super.initState();
 
-    // Initialize wardrobe data with delay to ensure proper BLoC setup
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Small delay to ensure everything is properly initialized
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          context.read<WardrobeBloc>().add(WardrobeLoadItems());
-        }
-      });
-    });
+    // WardrobeBloc initialization is handled by MainContainer
+    // to prevent race conditions and double initialization
 
     // If we have image data from model upload, we could process it here
     if (widget.imageData != null) {

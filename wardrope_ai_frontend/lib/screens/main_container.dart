@@ -59,7 +59,7 @@ class _MainContainerState extends State<MainContainer>
       curve: Curves.easeInOutCubic,
     ));
 
-    // Initialize wardrobe bloc immediately after first frame
+    // Initialize app state immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeApp();
     });
@@ -69,17 +69,16 @@ class _MainContainerState extends State<MainContainer>
     if (!_isInitialized) {
       _isInitialized = true;
 
-      // Ensure navigation starts at wardrobe (index 0)
-      if (context.read<NavigationBloc>().state.currentIndex != 0) {
-        context.read<NavigationBloc>().add(const NavigationTabChanged(0));
-      }
-
-      // Initialize wardrobe bloc with proper loading
+      // Initialize wardrobe bloc first
       context.read<WardrobeBloc>().add(WardrobeLoadItems());
 
-      // Force a rebuild to ensure the wardrobe screen is properly loaded
-      if (mounted) {
-        setState(() {});
+      // Ensure navigation starts at wardrobe (index 0) and trigger navigation event
+      final currentState = context.read<NavigationBloc>().state;
+      if (currentState.currentIndex != 0) {
+        context.read<NavigationBloc>().add(const NavigationTabChanged(0));
+      } else {
+        // Force trigger navigation to ensure first screen renders properly
+        context.read<NavigationBloc>().add(const NavigationTabChanged(0));
       }
     }
   }
@@ -132,6 +131,11 @@ class _MainContainerState extends State<MainContainer>
                     return AnimatedBuilder(
                       animation: _pageTransitionController,
                       builder: (context, child) {
+                        // For initial load or when indices are the same, show the current screen directly
+                        if (navState.currentIndex == navState.previousIndex) {
+                          return _screens[navState.currentIndex];
+                        }
+
                         return Stack(
                           children: [
                             // Previous page (fading out)

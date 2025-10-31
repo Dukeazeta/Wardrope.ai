@@ -1,212 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class ModelScreen extends StatelessWidget {
+class ModelScreen extends StatefulWidget {
   const ModelScreen({super.key});
 
   @override
+  State<ModelScreen> createState() => _ModelScreenState();
+}
+
+class _ModelScreenState extends State<ModelScreen> {
+  // This would typically come from your state management (Bloc/Provider/etc.)
+  bool hasModel = false; // TODO: Get actual model state from your BLoC
+  String? modelImagePath; // TODO: Get actual model image path from your BLoC
+
+  @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final bottomNavHeight = 92.h; // Height of bottom navbar from your design
+    final availableHeight = screenHeight - bottomNavHeight;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        title: const Text(
-          'Your Model',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {
-              // TODO: Edit model
-            },
-            icon: const Icon(
-              Icons.edit_outlined,
-              color: Colors.black,
-              size: 24,
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Model Display Area
+            // Header
             Container(
-              width: double.infinity,
-              height: 400,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  children: [
-                    // Placeholder for model image
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                            child: const Icon(
-                              Icons.person_outline,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No model photo yet',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Add your photo to try on outfits virtually',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                              height: 1.4,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Model',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (hasModel)
+                    IconButton(
+                      onPressed: () {
+                        // TODO: Edit model functionality
+                      },
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        color: Colors.black,
+                        size: 24.sp,
                       ),
                     ),
-
-                    // Upload Button Overlay
-                    Positioned(
-                      bottom: 20,
-                      right: 20,
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            // TODO: Navigate to model upload
-                            Navigator.of(context).pushNamed('/model-upload');
-                          },
-                          icon: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 32),
-
-            // Model Settings
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Model Settings',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
+            // Full Screen Model Display Area
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                height: availableHeight - 80.h, // Account for header and CTA button
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.02),
                 ),
+                child: hasModel && modelImagePath != null
+                    ? _buildUserModelDisplay()
+                    : _buildPlaceholderDisplay(),
               ),
             ),
-            const SizedBox(height: 16),
 
-            _buildSettingsCard(
-              icon: Icons.height_outlined,
-              title: 'Height',
-              subtitle: 'Set your height for better fitting',
-              value: 'Not set',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildSettingsCard(
-              icon: Icons.straighten_outlined,
-              title: 'Body Type',
-              subtitle: 'Select your body type for accurate sizing',
-              value: 'Not selected',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildSettingsCard(
-              icon: Icons.palette_outlined,
-              title: 'Skin Tone',
-              subtitle: 'Choose skin tone for realistic try-on',
-              value: 'Not selected',
-              onTap: () {},
-            ),
-            const SizedBox(height: 12),
-            _buildSettingsCard(
-              icon: Icons.style_outlined,
-              title: 'Style Preferences',
-              subtitle: 'Set your preferred fashion styles',
-              value: 'Not configured',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 32),
-
-            // Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate to model upload
-                  Navigator.of(context).pushNamed('/model-upload');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Update Model Photo',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+            // CTA Button Area
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+              child: _buildCTAButton(),
             ),
           ],
         ),
@@ -214,92 +79,198 @@ class ModelScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.black.withValues(alpha: 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+  Widget _buildPlaceholderDisplay() {
+    return Stack(
+      children: [
+        // Main content
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Model.png placeholder image
+              Container(
+                width: 200.w,
+                height: 300.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: Offset(0, 8.h),
                     ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Image.asset(
+                    'assets/Model.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback if Model.png doesn't exist
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(16.r),
+                          border: Border.all(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 80.sp,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 2),
+                ),
+              ),
+
+              SizedBox(height: 32.h),
+
+              // Text content
+              Text(
+                'No model photo yet',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+
+              SizedBox(height: 8.h),
+
+              Text(
+                'Add your photo to try on outfits virtually',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 12.h),
+
+              Text(
+                'Full body photos work best',
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey.shade500,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Floating upload hint
+        Positioned(
+          bottom: 40.h,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
                   Text(
-                    subtitle,
+                    'Tap below to add your model',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                      height: 1.3,
+                      color: Colors.white,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserModelDisplay() {
+    return Container(
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.zero,
+        child: Image.asset(
+          modelImagePath!,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          errorBuilder: (context, error, stackTrace) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48.sp,
+                    color: Colors.red,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: Colors.grey.shade400,
-                ),
-              ],
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Failed to load model image',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCTAButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56.h,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.of(context).pushNamed('/model-upload');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28.r),
+          ),
+          elevation: 0,
+          shadowColor: Colors.black.withValues(alpha: 0.2),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasModel ? Icons.camera_alt : Icons.add_photo_alternate,
+              size: 20.sp,
+            ),
+            SizedBox(width: 8.w),
+            Text(
+              hasModel ? 'Update Model Photo' : 'Add Your Model',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
