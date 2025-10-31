@@ -141,7 +141,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white.withOpacity(0.8),
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: IconButton(
@@ -269,7 +269,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
   Widget _buildBottomActions() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withValues(alpha: 0.8),
         border: Border(
           top: BorderSide(
             color: Colors.black.withValues(alpha: 0.1),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/clothing_item.dart';
 import '../widgets/clothing_item_card.dart';
 import '../widgets/category_selector.dart';
+import '../theme/app_theme.dart';
+import '../bloc/wardrobe/wardrobe_bloc.dart';
 import 'add_clothing_screen.dart';
 
 class WardrobeScreen extends StatefulWidget {
@@ -18,9 +20,6 @@ class WardrobeScreen extends StatefulWidget {
 }
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
-  List<ClothingItem> clothingItems = [];
-  String selectedCategory = 'All';
-
   final List<String> categories = [
     'All',
     'Shirts',
@@ -33,17 +32,16 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize wardrobe data if not already loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<WardrobeBloc>().add(WardrobeLoadItems());
+    });
+
     // If we have image data from model upload, we could process it here
     if (widget.imageData != null) {
-      // TODO: Process the image and add to wardrobe
+      // TODO: Process the image and add to wardrobe using BLoC
     }
-  }
-
-  List<ClothingItem> get filteredItems {
-    if (selectedCategory == 'All') {
-      return clothingItems;
-    }
-    return clothingItems.where((item) => item.category == selectedCategory).toList();
   }
 
   void _navigateToAddClothing() async {
@@ -53,72 +51,89 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       ),
     );
 
-    if (result != null && result['clothingItem'] != null) {
-      setState(() {
-        clothingItems.add(result['clothingItem'] as ClothingItem);
-      });
+    if (mounted && result != null && result['clothingItem'] != null) {
+      context.read<WardrobeBloc>().add(
+        WardrobeAddItem(result['clothingItem'] as ClothingItem),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                children: [
-                  const Text(
-                    'My Wardrobe',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+    return BlocBuilder<WardrobeBloc, WardrobeState>(
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppTheme.spacingM,
+                    AppTheme.spacingM,
+                    AppTheme.spacingM,
+                    AppTheme.spacingS,
                   ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: _navigateToAddClothing,
-                    icon: const Icon(
-                      Icons.add,
-                      color: Colors.black,
-                      size: 24,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'My Wardrobe',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: AppTheme.headlineLargeFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: _navigateToAddClothing,
+                        icon: Icon(
+                          Icons.add,
+                          color: Colors.black,
+                          size: AppTheme.iconM,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                if (state.hasItems) _buildCategorySelector(state),
+                Expanded(
+                  child: state.status == WardrobeStatus.loading
+                      ? _buildLoadingState()
+                      : state.isEmpty
+                          ? _buildEmptyState()
+                          : _buildClothingGrid(state),
+                ),
+              ],
             ),
-            if (clothingItems.isNotEmpty) _buildCategorySelector(),
-            Expanded(
-              child: clothingItems.isEmpty
-                  ? _buildEmptyState()
-                  : _buildClothingGrid(),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCategorySelector() {
+  Widget _buildCategorySelector(WardrobeState state) {
     return CategorySelector(
       categories: categories,
-      selectedCategory: selectedCategory,
+      selectedCategory: state.selectedCategory,
       onCategorySelected: (category) {
-        setState(() {
-          selectedCategory = category;
-        });
+        context.read<WardrobeBloc>().add(WardrobeFilterByCategory(category));
       },
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: Colors.black,
+      ),
     );
   }
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingXL),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -129,23 +144,23 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusL),
                 ),
-                child: const Center(
+                child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         Icons.checkroom_outlined,
-                        size: 64,
+                        size: AppTheme.iconXXL,
                         color: Colors.grey,
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppTheme.spacingM),
                       Text(
                         'Add clothes image',
                         style: TextStyle(
                           color: Colors.grey,
-                          fontSize: 14,
+                          fontSize: AppTheme.bodyMediumFontSize,
                         ),
                       ),
                     ],
@@ -154,45 +169,45 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               );
             },
           ),
-          const SizedBox(height: 40),
-          const Text(
+          SizedBox(height: AppTheme.spacingXL),
+          Text(
             'Your wardrobe is empty',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: AppTheme.displaySmallFontSize,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppTheme.spacingM),
           Text(
             'Start building your digital wardrobe by adding your favorite clothes',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: AppTheme.bodyLargeFontSize,
               color: Colors.grey.shade600,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          SizedBox(height: AppTheme.spacingL),
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: AppTheme.buttonHeightL,
             child: ElevatedButton(
               onPressed: _navigateToAddClothing,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                 ),
                 elevation: 0,
                 shadowColor: Colors.transparent,
               ),
-              child: const Text(
+              child: Text(
                 'Add Clothes',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: AppTheme.titleLargeFontSize,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
                 ),
@@ -204,23 +219,23 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
     );
   }
 
-  Widget _buildClothingGrid() {
+  Widget _buildClothingGrid(WardrobeState state) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(AppTheme.spacingM),
       child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisSpacing: AppTheme.spacingM,
+          mainAxisSpacing: AppTheme.spacingM,
         ),
-        itemCount: filteredItems.length,
+        itemCount: state.displayItems.length,
         itemBuilder: (context, index) {
-          final item = filteredItems[index];
+          final item = state.displayItems[index];
           return ClothingItemCard(
             item: item,
             onTap: () {
-              // TODO: Show item details or edit
+              context.read<WardrobeBloc>().add(WardrobeSelectItem(item.id));
             },
             onLongPress: () {
               _showItemOptions(item);
@@ -275,7 +290,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 TextButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    // TODO: Edit item
+                    // TODO: Edit item using BLoC
                   },
                   icon: const Icon(Icons.edit, color: Colors.black),
                   label: const Text(
@@ -286,9 +301,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 TextButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    setState(() {
-                      clothingItems.remove(item);
-                    });
+                    context.read<WardrobeBloc>().add(WardrobeRemoveItem(item.id));
                   },
                   icon: const Icon(Icons.delete, color: Colors.red),
                   label: const Text(
