@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
+import '../bloc/model/model_bloc.dart';
+import '../services/model_service.dart';
 
 class ModelScreen extends StatefulWidget {
   const ModelScreen({super.key});
@@ -10,9 +15,87 @@ class ModelScreen extends StatefulWidget {
 }
 
 class _ModelScreenState extends State<ModelScreen> {
-  // This would typically come from your state management (Bloc/Provider/etc.)
-  bool hasModel = false; // TODO: Get actual model state from your BLoC
-  String? modelImagePath; // TODO: Get actual model image path from your BLoC
+  final ImagePicker _imagePicker = ImagePicker();
+  String? _currentUserId; // This would come from your auth system
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeModel();
+  }
+
+  void _initializeModel() {
+    // Check model service status first
+    context.read<ModelBloc>().add(ModelStatusCheckRequested());
+
+    // Load user models (using a placeholder user ID for now)
+    // In a real app, this would come from your authentication system
+    _currentUserId = 'user_placeholder_123';
+    context.read<ModelBloc>().add(ModelLoadRequested(_currentUserId!));
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final XFile? photo = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.rear,
+        imageQuality: 85,
+      );
+
+      if (photo != null) {
+        final File imageFile = File(photo.path);
+
+        // Upload model via BLoC
+        if (mounted) {
+          context.read<ModelBloc>().add(ModelUploadFromCamera(
+            imageFile: imageFile,
+            userId: _currentUserId,
+          ));
+        }
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to take photo: $e');
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final File imageFile = File(image.path);
+
+        // Upload model via BLoC
+        if (mounted) {
+          context.read<ModelBloc>().add(ModelUploadFromGallery(
+            imageFile: imageFile,
+            userId: _currentUserId,
+          ));
+        }
+      }
+    } catch (e) {
+      _showErrorDialog('Failed to pick image: $e');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,218 +103,194 @@ class _ModelScreenState extends State<ModelScreen> {
     final bottomNavHeight = 92.h; // Height of bottom navbar from your design
     final availableHeight = screenHeight - bottomNavHeight;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return BlocListener<ModelBloc, ModelState>(
+      listener: (context, state) {
+        // Handle errors
+        if (state.hasError) {
+          _showErrorDialog(state.errorMessage ?? 'An error occurred');
+        }
+
+              },
+      child: BlocBuilder<ModelBloc, ModelState>(
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: Column(
                 children: [
-                  Text(
-                    'Your Model',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.bold,
+                  // Header
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your Model',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (state.hasModel)
+                          IconButton(
+                            onPressed: () {
+                              // TODO: Edit model functionality
+                            },
+                            icon: Icon(
+                              Icons.edit_outlined,
+                              color: Colors.black,
+                              size: 24.sp,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  if (hasModel)
-                    IconButton(
-                      onPressed: () {
-                        // TODO: Edit model functionality
-                      },
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        color: Colors.black,
-                        size: 24.sp,
+
+                  // Full Screen Model Display Area
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      height: availableHeight - 80.h, // Account for header and CTA button
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.02),
+                      ),
+                      child: _buildModelDisplay(state),
+                    ),
+                  ),
+
+                  // CTA Button Area
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          width: 1,
+                        ),
                       ),
                     ),
+                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                    child: _buildActionButtons(state),
+                  ),
                 ],
               ),
             ),
-
-            // Full Screen Model Display Area
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                height: availableHeight - 80.h, // Account for header and CTA button
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.02),
-                ),
-                child: hasModel && modelImagePath != null
-                    ? _buildUserModelDisplay()
-                    : _buildPlaceholderDisplay(),
-              ),
-            ),
-
-            // CTA Button Area
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: _buildCTAButton(),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildPlaceholderDisplay() {
-    return Stack(
-      children: [
-        // Main content
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Model.png placeholder image
-              Container(
-                width: 200.w,
-                height: 300.h,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: Offset(0, 8.h),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.r),
-                  child: Image.asset(
-                    'assets/Model.png',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback if Model.png doesn't exist
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            width: 1,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.person_outline,
-                          size: 80.sp,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 32.h),
-
-              // Text content
-              Text(
-                'No model photo yet',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-
-              SizedBox(height: 8.h),
-
-              Text(
-                'Add your photo to try on outfits virtually',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey.shade600,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              SizedBox(height: 12.h),
-
-              Text(
-                'Full body photos work best',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey.shade500,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Floating upload hint
-        Positioned(
-          bottom: 40.h,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                    size: 16.sp,
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Tap below to add your model',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+  Widget _buildModelDisplay(ModelState state) {
+    // Show loading indicator
+    if (state.isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: Colors.black,
+              strokeWidth: 2,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Processing your model...',
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey.shade600,
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      );
+    }
+
+    // Show outfit on model if available
+    if (state.hasOutfit && state.currentOutfitImage != null) {
+      return _buildImageDisplay(state.currentOutfitImage!);
+    }
+
+    // Show processed model if available
+    if (state.hasModel && state.currentModel?.processedImageUrl != null) {
+      return _buildImageDisplay(state.currentModel!.processedImageUrl!);
+    }
+
+    // Show placeholder if no model
+    return _buildPlaceholderDisplay();
+  }
+
+  Widget _buildImageDisplay(String imageUrl) {
+    // Check if it's a data URL (base64) or file path
+    if (imageUrl.startsWith('data:')) {
+      return _buildBase64Image(imageUrl);
+    } else if (imageUrl.startsWith('/')) {
+      return _buildFileImage(imageUrl);
+    } else {
+      return _buildAssetImage(imageUrl);
+    }
+  }
+
+  Widget _buildBase64Image(String base64Url) {
+    try {
+      final pureBase64 = ModelService.extractBase64FromDataUrl(base64Url);
+
+      return Image.memory(
+        const Base64Decoder().convert(pureBase64),
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorDisplay('Failed to load model image');
+        },
+      );
+    } catch (e) {
+      return _buildErrorDisplay('Invalid image data');
+    }
+  }
+
+  Widget _buildFileImage(String filePath) {
+    return Image.file(
+      File(filePath),
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildErrorDisplay('Failed to load model image');
+      },
     );
   }
 
-  Widget _buildUserModelDisplay() {
-    return Container(
-      width: double.infinity,
+  Widget _buildAssetImage(String assetPath) {
+    return Image.asset(
+      assetPath,
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildErrorDisplay('Failed to load model image');
+      },
+    );
+  }
+
+  Widget _buildPlaceholderDisplay() {
+    return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
         child: Image.asset(
-          modelImagePath!,
-          fit: BoxFit.contain,
-          alignment: Alignment.center,
+          'assets/Model.png',
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48.sp,
-                    color: Colors.red,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'Failed to load model image',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: Colors.red,
-                    ),
-                  ),
-                ],
+            // Fallback if Model.png doesn't exist
+            return Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.04),
+              ),
+              child: Icon(
+                Icons.person_outline,
+                size: 80.sp,
+                color: Colors.grey,
               ),
             );
           },
@@ -240,41 +299,152 @@ class _ModelScreenState extends State<ModelScreen> {
     );
   }
 
-  Widget _buildCTAButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56.h,
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed('/model-upload');
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28.r),
+  Widget _buildErrorDisplay(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 48.sp,
+            color: Colors.red,
           ),
-          elevation: 0,
-          shadowColor: Colors.black.withValues(alpha: 0.2),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              hasModel ? Icons.camera_alt : Icons.add_photo_alternate,
-              size: 20.sp,
+          SizedBox(height: 16.h),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.red,
             ),
-            SizedBox(width: 8.w),
-            Text(
-              hasModel ? 'Update Model Photo' : 'Add Your Model',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(ModelState state) {
+    // Don't show upload buttons if user has a model and is viewing an outfit
+    if (state.hasOutfit) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 48.h,
+            child: ElevatedButton(
+              onPressed: () {
+                // Clear the outfit to go back to the base model
+                context.read<ModelBloc>().add(OutfitClearRequested());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Remove Outfit',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ],
+          ),
+        ],
+      );
+    }
+
+    // Show upload buttons if no model or base model is showing
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 48.h,
+          child: ElevatedButton(
+            onPressed: (state.isLoading) ? null : _takePhoto,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              elevation: 0,
+              disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+            ),
+            child: state.isLoading
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.h,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    state.hasModel ? 'Retake Photo' : 'Take Photo',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
         ),
-      ),
+        SizedBox(height: 12.h),
+        Container(
+          width: double.infinity,
+          height: 48.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24.r),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: Offset(0, 4.h),
+              ),
+            ],
+          ),
+          child: ElevatedButton(
+            onPressed: (state.isLoading) ? null : _pickFromGallery,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.black,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              padding: EdgeInsets.zero,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.photo_library_outlined,
+                  size: 20.sp,
+                  color: Colors.black.withValues(alpha: 0.7),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  state.hasModel ? 'Change Model' : 'Upload from Gallery',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

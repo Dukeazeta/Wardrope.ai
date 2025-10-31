@@ -3,6 +3,7 @@ import 'auth/auth_bloc.dart';
 import 'wardrobe/wardrobe_bloc.dart';
 import 'onboarding/onboarding_bloc.dart';
 import 'navigation/navigation_bloc.dart';
+import 'model/model_bloc.dart';
 
 class AppBlocProvider {
   static final List<BlocProvider> providers = [
@@ -17,6 +18,9 @@ class AppBlocProvider {
     ),
     BlocProvider<NavigationBloc>(
       create: (context) => NavigationBloc(),
+    ),
+    BlocProvider<ModelBloc>(
+      create: (context) => ModelBloc(),
     ),
   ];
 }

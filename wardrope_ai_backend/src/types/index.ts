@@ -109,3 +109,66 @@ export interface UploadedFile {
   filename: string;
   path: string;
 }
+
+// Model-related Types
+export interface ModelData {
+  id: string;
+  userId?: string;
+  originalImageUrl: string;
+  processedImageUrl?: string;
+  modelType: 'user' | 'ai_generated';
+  status: 'processing' | 'completed' | 'failed';
+  metadata?: ModelMetadata;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ModelMetadata {
+  originalSize: number;
+  processedSize?: number;
+  processingTime?: number;
+  confidence?: number;
+  segments?: string[];
+  model?: string;
+  enhancedSegmentation?: boolean;
+  height?: number;
+  weight?: number;
+  bodyType?: string;
+  skinTone?: string;
+}
+
+export interface ModelUploadResponse {
+  success: boolean;
+  message: string;
+  modelData?: ModelData;
+  processedImageUrl?: string;
+  originalImageUrl?: string;
+  metadata?: ModelMetadata;
+}
+
+export interface OutfitApplicationRequest {
+  modelId: string;
+  clothingItemId: string;
+  outfitData?: {
+    category: string;
+    name: string;
+    imageUrl: string;
+    position?: {
+      x: number;
+      y: number;
+      scale?: number;
+    };
+  };
+}
+
+export interface OutfitApplicationResponse {
+  success: boolean;
+  message: string;
+  resultImageUrl?: string;
+  metadata?: {
+    processingTime: number;
+    modelUsed: string;
+    confidence: number;
+    outfitItems: string[];
+  };
+}

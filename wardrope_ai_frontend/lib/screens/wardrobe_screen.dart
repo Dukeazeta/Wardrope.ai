@@ -5,6 +5,8 @@ import '../widgets/clothing_item_card.dart';
 import '../widgets/category_selector.dart';
 import '../theme/app_theme.dart';
 import '../bloc/wardrobe/wardrobe_bloc.dart';
+import '../bloc/model/model_bloc.dart';
+import '../bloc/navigation/navigation_bloc.dart';
 import 'add_clothing_screen.dart';
 
 class WardrobeScreen extends StatefulWidget {
@@ -311,6 +313,32 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     style: TextStyle(color: Colors.black),
                   ),
                 ),
+                BlocBuilder<ModelBloc, ModelState>(
+                  builder: (context, modelState) {
+                    return TextButton.icon(
+                      onPressed: modelState.hasModel && !modelState.isProcessingOutfit
+                          ? () {
+                              Navigator.of(context).pop();
+                              _applyOutfitToModel(item, modelState);
+                            }
+                          : null,
+                      icon: Icon(
+                        Icons.person_outline,
+                        color: modelState.hasModel && !modelState.isProcessingOutfit
+                            ? Colors.blue
+                            : Colors.grey,
+                      ),
+                      label: Text(
+                        'Add to Model',
+                        style: TextStyle(
+                          color: modelState.hasModel && !modelState.isProcessingOutfit
+                              ? Colors.blue
+                              : Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 TextButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -329,5 +357,43 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         ),
       ),
     );
+  }
+
+  void _applyOutfitToModel(ClothingItem item, ModelState modelState) {
+    if (modelState.currentModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No model available. Please upload a model first.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Apply outfit to model
+    context.read<ModelBloc>().add(OutfitApplicationRequested(
+      modelId: modelState.currentModel!.id,
+      clothingItemId: item.id,
+      outfitData: {
+        'category': item.category,
+        'name': item.name,
+        'imageUrl': item.imageUrl,
+      },
+    ));
+
+    // Show loading message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Applying outfit to model...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // Navigate to model screen after a short delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        context.read<NavigationBloc>().add(const NavigationTabChanged(1)); // Navigate to model screen
+      }
+    });
   }
 }

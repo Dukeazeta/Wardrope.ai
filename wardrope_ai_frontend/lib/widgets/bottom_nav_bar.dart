@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../theme/app_theme.dart';
 
 class BottomNavBar extends StatefulWidget {
   final int currentIndex;
@@ -125,7 +124,6 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _iconScaleAnimation;
-  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {
@@ -149,14 +147,6 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.elasticOut,
-    ));
-
-    _colorAnimation = ColorTween(
-      begin: Colors.black.withValues(alpha: 0.6),
-      end: Colors.white,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOutCubic,
     ));
   }
 
