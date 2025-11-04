@@ -1,199 +1,262 @@
-# Wardrope AI Backend
+# Wardrope.AI Backend
 
-Backend API for Wardrope.ai - AI-powered fashion companion application.
+A scalable Express.js backend for Wardrope.AI - an intelligent wardrobe management and AI stylist application.
 
-## Features
+## 🚀 Features
 
-- **Advanced Image Processing**: Uses Google Generative AI (Gemini 2.5 Pro) with enhanced segmentation for professional background removal
-- **Context7 MCP Integration**: Enhanced context management for improved AI responses
-- **Intelligent Segmentation**: Pixel-level precision for person and clothing extraction
-- **File Upload**: Secure image upload with validation and size limits
-- **RESTful API**: Clean, documented API endpoints
-- **Error Handling**: Comprehensive error handling and logging
-- **CORS Support**: Cross-origin resource sharing for frontend integration
+- **User Authentication** - Secure authentication via Supabase
+- **Wardrobe Management** - Add, organize, and manage clothing items
+- **AI Image Generation** - Generate outfit visualizations using Google Imagen (Nano/Banana)
+- **3D Model Integration** - Upload and process user models for virtual try-ons
+- **Outfit Creation** - Create and manage outfit combinations
+- **AI Stylist** - Get personalized outfit recommendations
+- **Cloud Storage** - Secure file storage with AWS S3
+- **Image Processing** - Automatic image optimization and resizing
 
-## API Endpoints
+## 🏗️ Architecture
 
-### Image Processing
-
-#### `POST /api/image/process`
-Upload and process an image for background removal.
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `image` (file) - Image file to process
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Image processed successfully with Gemini 2.5 Pro",
-  "processedImageUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ...",
-  "originalImageUrl": "/uploads/original_1234567890.jpg",
-  "metadata": {
-    "originalSize": 2048576,
-    "processedSize": 1536000,
-    "processingTime": 3247,
-    "model": "gemini-2.5-pro",
-    "confidence": 0.95,
-    "segments": ["person", "clothing", "accessories"],
-    "enhancedSegmentation": true
-  }
-}
+```
+src/
+├── controllers/       # Request handlers with business logic
+├── models/           # Database models and static methods
+├── routes/           # API route definitions
+├── services/         # External service integrations
+├── libs/             # Core utilities and configurations
+├── middlewares/      # Express middlewares
+└── database/         # Database schemas and migrations
 ```
 
-#### `GET /api/image/status`
-Check the status of the image processing service.
+## 🛠️ Tech Stack
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Image processing service is running with Gemini 2.5 Pro",
-  "services": {
-    "gemini25Pro": true,
-    "model": "gemini-2.5-pro",
-    "capabilities": [
-      "enhanced-segmentation",
-      "object-detection",
-      "background-removal",
-      "edge-refinement",
-      "multi-modal-processing"
-    ],
-    "sharp": true,
-    "multer": true,
-    "context7Mcp": true
-  },
-  "version": "2.5.0"
-}
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
+- **Database**: PostgreSQL with Supabase
+- **Storage**: AWS S3
+- **AI**: Google Imagen (Nano/Banana models)
+- **Image Processing**: Sharp
+- **Authentication**: Supabase Auth
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL database
+- AWS account with S3 access
+- Google Cloud account with Imagen API access
+- Supabase project
+
+## ⚙️ Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/wardrope_ai
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=wardrope_ai
+DB_USER=your_username
+DB_PASSWORD=your_password
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_key
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+AWS_REGION=us-east-1
+AWS_S3_BUCKET_NAME=wardrope-ai-storage
+
+# Google Imagen Configuration
+GOOGLE_PROJECT_ID=your_project_id
+GOOGLE_LOCATION=us-central1
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+
+# Security
+JWT_SECRET=your_jwt_secret
+CORS_ORIGIN=http://localhost:3000
 ```
 
-### Health Check
+## 🚀 Quick Start
 
-#### `GET /health`
-Basic health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "OK",
-  "timestamp": "2024-01-01T12:00:00.000Z",
-  "uptime": 3600
-}
-```
-
-## Setup
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Google AI Studio API key
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
+1. **Clone and Install**
    ```bash
+   git clone <repository-url>
+   cd wardrope_ai_backend
    npm install
    ```
 
-3. Copy environment variables:
+2. **Database Setup**
    ```bash
-   cp .env.example .env
+   # Run database migrations
+   npm run db:migrate
+   
+   # Or manually execute the schema
+   psql -d wardrope_ai -f database/schema.sql
    ```
 
-4. Configure your environment variables in `.env`:
-   ```env
-   # Server Configuration
-   PORT=3000
-   NODE_ENV=development
-
-   # Google AI Configuration
-   GEMINI_API_KEY=your_gemini_api_key_here
-
-   # File Upload Configuration
-   MAX_FILE_SIZE=10485760
-   UPLOAD_PATH=./uploads
-   ```
-
-5. Build and run:
+3. **Start Development Server**
    ```bash
-   # Development
    npm run dev
+   ```
 
-   # Production
+4. **Build for Production**
+   ```bash
    npm run build
    npm start
    ```
 
-### Getting Google AI API Key
+## 📚 API Documentation
 
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Copy the key to your `.env` file
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
 
-## Dependencies
+### Wardrobe Management
+- `GET /api/wardrobe/:userId/items` - Get user's clothing items
+- `POST /api/wardrobe/:userId/items` - Add new clothing item
+- `GET /api/wardrobe/:userId/items/:itemId` - Get specific item
+- `PUT /api/wardrobe/:userId/items/:itemId` - Update clothing item
+- `DELETE /api/wardrobe/:userId/items/:itemId` - Delete clothing item
+- `GET /api/wardrobe/:userId/search` - Search clothing items
 
-- **express**: Web framework
-- **multer**: File upload handling
-- **sharp**: Image processing
-- **@google/generative-ai**: Google AI integration with Gemini 2.5 Pro
-- **helmet**: Security middleware
-- **cors**: Cross-origin resource sharing
-- **morgan**: HTTP request logger
+### User Models (3D/Photos)
+- `POST /api/models/:userId/upload` - Upload user model
+- `GET /api/models/:userId` - Get user's models
+- `GET /api/models/:modelId` - Get specific model
+- `PUT /api/models/:modelId` - Update model
+- `DELETE /api/models/:modelId` - Delete model
+- `POST /api/models/:modelId/apply-outfit` - Apply outfit to model
 
-## Development
+### Outfits
+- `GET /api/outfits/:userId` - Get user's outfits
+- `POST /api/outfits/:userId` - Create new outfit
+- `GET /api/outfits/:outfitId` - Get specific outfit
+- `PUT /api/outfits/:outfitId` - Update outfit
+- `DELETE /api/outfits/:outfitId` - Delete outfit
+- `POST /api/outfits/:userId/generate-image` - Generate outfit visualization
+- `POST /api/outfits/:userId/generate-preview` - Generate outfit preview
 
-### Scripts
+### AI Stylist
+- `POST /api/ai-stylist/:userId/recommendations` - Get outfit recommendations
+- `POST /api/ai-stylist/:userId/style-analysis` - Analyze personal style
+- `POST /api/ai-stylist/:userId/seasonal-suggestions` - Get seasonal suggestions
 
-- `npm run dev` - Start development server with nodemon
-- `npm run dev:ts` - Start with ts-node directly
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm start` - Start production server
-- `npm run clean` - Remove build directory
-- `npm run type-check` - Type checking without compilation
+### Image Generation
+- `POST /api/image-generation/generate` - Generate AI images
+- `POST /api/image-generation/enhance` - Enhance existing images
+- `GET /api/image-generation/status/:jobId` - Check generation status
 
-### Project Structure
+## 🎨 Image Generation Features
 
-```
-src/
-├── index.ts              # Main application entry point
-├── routes/
-│   └── imageProcessing.ts # Image processing routes
-└── types/
-    └── index.ts          # TypeScript type definitions
-```
+### Outfit Visualization
+Generate realistic images of users wearing specific outfits:
+- Uses user's uploaded model photo as base
+- Combines multiple clothing items
+- Supports different styles and occasions
+- Natural lighting and backgrounds
 
-## Error Handling
+### AI Enhancement
+Improve clothing item photos:
+- Professional product photography style
+- Background removal and replacement
+- Color and lighting enhancement
+- Multiple style variations
 
-The API includes comprehensive error handling:
+## 🗄️ Database Schema
 
-- **400 Bad Request**: Invalid input, file size limits, unsupported file types
-- **500 Internal Server Error**: Processing errors, service unavailability
-- **404 Not Found**: Endpoint not found
+### Core Tables
+- `users` - User accounts and profiles
+- `clothing_items` - Individual wardrobe items
+- `user_models` - User photos/3D models
+- `outfits` - Outfit combinations
+- `ai_recommendations` - Stylist suggestions
 
-All errors include descriptive messages and appropriate HTTP status codes.
+### Key Features
+- JSON fields for flexible metadata storage
+- Array fields for tags and categories
+- Optimized indexes for search performance
+- Foreign key constraints for data integrity
 
-## Security
+## 🔒 Security Features
 
+- JWT-based authentication
+- Supabase Auth integration
+- Request rate limiting
 - Input validation and sanitization
-- File type and size restrictions
-- Helmet.js security headers
-- CORS configuration
-- Rate limiting (to be implemented)
+- CORS protection
+- Secure file upload handling
 
-## Production Deployment
+## 📈 Performance Optimizations
 
-For production deployment:
+- Image compression and resizing
+- Database query optimization
+- Caching for frequently accessed data
+- Efficient file storage with S3
+- Background processing for AI tasks
 
-1. Set `NODE_ENV=production`
-2. Configure proper CORS origins
-3. Set up file storage (S3, etc.)
-4. Implement rate limiting
-5. Set up monitoring and logging
-6. Configure HTTPS with reverse proxy (nginx/Apache)
+## 🧪 Testing
 
-## License
+```bash
+# Run all tests
+npm test
 
-ISC
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- --grep "UserController"
+```
+
+## 📦 Deployment
+
+### Docker Deployment
+```bash
+# Build image
+docker build -t wardrope-ai-backend .
+
+# Run container
+docker run -p 3000:3000 --env-file .env wardrope-ai-backend
+```
+
+### Environment-Specific Configurations
+- Development: Auto-reload with nodemon
+- Staging: Reduced logging, performance monitoring
+- Production: Optimized builds, health checks
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Check the [API documentation](API_ROUTES_DOCUMENTATION.md)
+- Review the [Model Setup Guide](MODEL_SETUP_GUIDE.md)
+
+## 🔄 Version History
+
+- **v1.0.0** - Initial release with core wardrobe management
+- **v1.1.0** - Added AI image generation with Google Imagen
+- **v1.2.0** - Enhanced outfit visualization and user models
+- **v1.3.0** - AWS S3 integration and performance improvements
+
+---
+
+Built with ❤️ for fashion enthusiasts and AI lovers

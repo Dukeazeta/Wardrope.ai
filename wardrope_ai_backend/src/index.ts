@@ -3,8 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import imageProcessingRoutes from './routes/imageProcessing';
-import modelRoutes from './routes/model';
+import routes from './routes';
+import { errorHandler } from './middlewares/errorHandler';
 
 // Load environment variables
 dotenv.config();
@@ -57,17 +57,10 @@ app.get('/health', (req: Request, res: Response<HealthResponse>) => {
 });
 
 // API Routes
-app.use('/api/image', imageProcessingRoutes);
-app.use('/api/model', modelRoutes);
+app.use('/api', routes);
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response<ErrorResponse>, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Something went wrong!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
-  });
-});
+app.use(errorHandler);
 
 // 404 handler
 app.use('*', (req: Request, res: Response<ErrorResponse>) => {
