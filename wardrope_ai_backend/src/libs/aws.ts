@@ -200,11 +200,16 @@ export class AWSService {
         );
       }
 
-      return {
+      const result: { originalImageUrl: string; processedImageUrl: string; modelDataUrl?: string } = {
         originalImageUrl: originalUrl,
         processedImageUrl: processedUrl,
-        modelDataUrl,
       };
+
+      if (modelDataUrl) {
+        result.modelDataUrl = modelDataUrl;
+      }
+
+      return result;
     } catch (error) {
       console.error('Error uploading model files:', error);
       throw new Error('Failed to upload model files');

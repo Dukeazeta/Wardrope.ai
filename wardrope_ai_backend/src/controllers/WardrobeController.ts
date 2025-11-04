@@ -15,7 +15,7 @@ const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(null, false);
     }
   },
 });
@@ -54,7 +54,7 @@ export class WardrobeController {
 
       if (season) {
         clothingItems = clothingItems.filter(item => 
-          item.season?.toLowerCase() === (season as string).toLowerCase()
+          item.season && item.season.includes(season as string)
         );
       }
 
@@ -98,10 +98,10 @@ export class WardrobeController {
         return;
       }
 
-      if (!name || !category) {
+      if (!name || !category || !color) {
         res.status(400).json({
           success: false,
-          message: 'Name and category are required'
+          message: 'Name, category, and color are required'
         });
         return;
       }
@@ -139,14 +139,14 @@ export class WardrobeController {
         user_id: userId,
         name,
         category,
-        brand: brand || null,
-        color: color || null,
-        size: size || null,
-        season: season || null,
-        image_url: imageUrl || null,
+        color,
+        brand: brand || undefined,
+        size: size || undefined,
+        season: season ? [season] : undefined,
+        ...(imageUrl && { image_url: imageUrl }),
         tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
-        purchase_date: purchase_date ? new Date(purchase_date) : null,
-        price: price ? parseFloat(price) : null
+        ...(purchase_date && { purchase_date: new Date(purchase_date) }),
+        ...(price && { price: parseFloat(price) })
       };
 
       const clothingItem = await ClothingItem.create(clothingItemAttributes);
@@ -422,7 +422,7 @@ export class WardrobeController {
         categories: [...new Set(clothingItems.map(item => item.category))],
         brands: [...new Set(clothingItems.filter(item => item.brand).map(item => item.brand))],
         colors: [...new Set(clothingItems.filter(item => item.color).map(item => item.color))],
-        seasons: [...new Set(clothingItems.filter(item => item.season).map(item => item.season))],
+        seasons: [...new Set(clothingItems.filter(item => item.season).flatMap(item => item.season!))],
         recentlyAdded: clothingItems
           .sort((a, b) => new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime())
           .slice(0, 5),

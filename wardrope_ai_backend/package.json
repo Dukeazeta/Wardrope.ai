@@ -18,25 +18,33 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
   },
-  "keywords": ["ai", "fashion", "wardrobe", "virtual-try-on", "image-processing", "supabase"],
+  "keywords": [
+    "ai",
+    "fashion",
+    "wardrobe",
+    "virtual-try-on",
+    "image-processing",
+    "supabase"
+  ],
   "author": "Wardrope.ai Team",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.658.1",
+    "@aws-sdk/s3-request-presigner": "^3.658.1",
+    "@google-cloud/aiplatform": "^5.12.0",
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.7.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",
     "multer": "^1.4.5-lts.1",
-    "@google/generative-ai": "^0.21.0",
-    "sharp": "^0.33.5",
-    "uuid": "^9.0.1",
-    "@supabase/supabase-js": "^2.39.0",
     "pg": "^8.11.3",
-    "@aws-sdk/client-s3": "^3.658.1",
-    "@aws-sdk/s3-request-presigner": "^3.658.1",
-    "axios": "^1.7.7"
+    "sharp": "^0.33.5",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -44,8 +52,8 @@
     "@types/morgan": "^1.9.10",
     "@types/multer": "^1.4.12",
     "@types/node": "^24.9.1",
-    "@types/uuid": "^9.0.8",
     "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.8",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

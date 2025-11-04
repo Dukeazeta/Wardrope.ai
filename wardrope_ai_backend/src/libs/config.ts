@@ -38,6 +38,7 @@ export const config = {
 
   // Google AI Configuration
   googleAI: {
+    projectId: process.env.GOOGLE_PROJECT_ID || '',
     apiKey: process.env.GOOGLE_AI_API_KEY || '',
     geminiApiKey: process.env.GEMINI_API_KEY || '',
     imagenApiKey: process.env.GOOGLE_IMAGEN_API_KEY || '',
