@@ -37,10 +37,14 @@ export class GoogleImagenService {
   private static projectId: string;
 
   static {
-    // Extract project ID from the endpoint URL in config
+    // Extract project ID from the endpoint URL in config, or use the direct projectId
     const endpoint = config.googleAI.imagenEndpoint;
     const match = endpoint.match(/projects\/([^\/]+)\//);
-    this.projectId = match ? match[1] : '';
+    this.projectId = match ? match[1]! : (config.googleAI.projectId || '');
+    
+    if (!this.projectId) {
+      console.warn('Google AI project ID not configured. Image generation will not work.');
+    }
   }
 
   /**

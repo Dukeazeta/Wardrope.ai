@@ -318,9 +318,15 @@ export class ModelController {
       // Check if Google Imagen is configured for AI generation
       if (GoogleImagenService.isConfigured()) {
         try {
+          // Ensure we have a valid model image URL
+          const modelImageUrl = modelData.processed_model_url || modelData.original_image_url;
+          if (!modelImageUrl) {
+            throw new Error('No valid model image URL available');
+          }
+
           // Generate outfit visualization using AI
           const imageGenResult = await GoogleImagenService.generateOutfitVisualization({
-            modelImageUrl: modelData.processed_model_url || modelData.original_image_url,
+            modelImageUrl,
             clothingItems: clothingItems.map(item => ({
               id: item.id!,
               imageUrl: item.image_url || '',
