@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:io';
 import '../bloc/model/model_bloc.dart';
 import '../services/model_service.dart';
+import '../theme/app_theme.dart';
+import '../utils/theme_aware_image.dart';
 
 class ModelScreen extends StatefulWidget {
   const ModelScreen({super.key});
@@ -99,6 +101,9 @@ class _ModelScreenState extends State<ModelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomNavHeight = 92.h; // Height of bottom navbar from your design
     final availableHeight = screenHeight - bottomNavHeight;
@@ -114,7 +119,6 @@ class _ModelScreenState extends State<ModelScreen> {
       child: BlocBuilder<ModelBloc, ModelState>(
         builder: (context, state) {
           return Scaffold(
-            backgroundColor: Colors.white,
             body: SafeArea(
               child: Column(
                 children: [
@@ -126,10 +130,10 @@ class _ModelScreenState extends State<ModelScreen> {
                       children: [
                         Text(
                           'Your Model',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.bold,
+                          style: AppTheme.primaryFont.copyWith(
+                            color: textColor,
+                            fontSize: AppTheme.headlineLargeFontSize,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         if (state.hasModel)
@@ -139,7 +143,7 @@ class _ModelScreenState extends State<ModelScreen> {
                             },
                             icon: Icon(
                               Icons.edit_outlined,
-                              color: Colors.black,
+                              color: textColor,
                               size: 24.sp,
                             ),
                           ),
@@ -153,7 +157,9 @@ class _ModelScreenState extends State<ModelScreen> {
                       width: double.infinity,
                       height: availableHeight - 80.h, // Account for header and CTA button
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.02),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.02)
+                            : Colors.black.withValues(alpha: 0.02),
                       ),
                       child: _buildModelDisplay(state),
                     ),
@@ -162,10 +168,14 @@ class _ModelScreenState extends State<ModelScreen> {
                   // CTA Button Area
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.95),
+                      color: isDark
+                          ? Colors.black.withValues(alpha: 0.95)
+                          : Colors.white.withValues(alpha: 0.95),
                       border: Border(
                         top: BorderSide(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.1),
                           width: 1,
                         ),
                       ),
@@ -183,6 +193,8 @@ class _ModelScreenState extends State<ModelScreen> {
   }
 
   Widget _buildModelDisplay(ModelState state) {
+    final theme = Theme.of(context);
+
     // Show loading indicator
     if (state.isLoading) {
       return Center(
@@ -190,15 +202,15 @@ class _ModelScreenState extends State<ModelScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              color: Colors.black,
+              color: theme.colorScheme.primary,
               strokeWidth: 2,
             ),
             SizedBox(height: 16.h),
             Text(
               'Processing your model...',
-              style: TextStyle(
-                fontSize: 16.sp,
-                color: Colors.grey.shade600,
+              style: AppTheme.primaryFont.copyWith(
+                fontSize: AppTheme.bodyLargeFontSize,
+                color: theme.textTheme.bodyMedium?.color,
               ),
             ),
           ],
@@ -274,8 +286,9 @@ class _ModelScreenState extends State<ModelScreen> {
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
-        child: Image.asset(
-          'assets/Model.png',
+        child: ThemeAwareImage.build(
+          context: context,
+          assetPath: 'assets/Model.png',
           width: double.infinity,
           height: double.infinity,
           fit: BoxFit.cover,
@@ -312,7 +325,7 @@ class _ModelScreenState extends State<ModelScreen> {
           SizedBox(height: 16.h),
           Text(
             message,
-            style: TextStyle(
+            style: AppTheme.primaryFont.copyWith(
               fontSize: 16.sp,
               color: Colors.red,
             ),
@@ -324,6 +337,14 @@ class _ModelScreenState extends State<ModelScreen> {
   }
 
   Widget _buildActionButtons(ModelState state) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : Colors.black.withValues(alpha: 0.2);
+    final containerColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
     // Don't show upload buttons if user has a model and is viewing an outfit
     if (state.hasOutfit) {
       return Column(
@@ -338,16 +359,17 @@ class _ModelScreenState extends State<ModelScreen> {
                 context.read<ModelBloc>().add(OutfitClearRequested());
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: isDark ? Colors.white : Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24.r),
                 ),
-                elevation: 0,
+                elevation: isDark ? 2 : 0,
+                shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
               ),
-              child: const Text(
+              child: Text(
                 'Remove Outfit',
-                style: TextStyle(
+                style: AppTheme.primaryFont.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -368,13 +390,14 @@ class _ModelScreenState extends State<ModelScreen> {
           child: ElevatedButton(
             onPressed: (state.isLoading) ? null : _takePhoto,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
+              backgroundColor: isDark ? Colors.white : Colors.black,
+              foregroundColor: isDark ? Colors.black : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24.r),
               ),
-              elevation: 0,
-              disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+              elevation: isDark ? 2 : 0,
+              shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
+              disabledBackgroundColor: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
             ),
             child: state.isLoading
                 ? SizedBox(
@@ -382,12 +405,12 @@ class _ModelScreenState extends State<ModelScreen> {
                     height: 20.h,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.black : Colors.white),
                     ),
                   )
                 : Text(
                     state.hasModel ? 'Retake Photo' : 'Take Photo',
-                    style: const TextStyle(
+                    style: AppTheme.primaryFont.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -399,15 +422,15 @@ class _ModelScreenState extends State<ModelScreen> {
           width: double.infinity,
           height: 48.h,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: containerColor,
             borderRadius: BorderRadius.circular(24.r),
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: borderColor,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                 blurRadius: 10,
                 offset: Offset(0, 4.h),
               ),
@@ -417,7 +440,7 @@ class _ModelScreenState extends State<ModelScreen> {
             onPressed: (state.isLoading) ? null : _pickFromGallery,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
-              foregroundColor: Colors.black,
+              foregroundColor: textColor,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24.r),
@@ -430,14 +453,15 @@ class _ModelScreenState extends State<ModelScreen> {
                 Icon(
                   Icons.photo_library_outlined,
                   size: 20.sp,
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: textColor.withValues(alpha: 0.7),
                 ),
                 SizedBox(width: 8.w),
                 Text(
                   state.hasModel ? 'Change Model' : 'Upload from Gallery',
-                  style: const TextStyle(
+                  style: AppTheme.primaryFont.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: textColor,
                   ),
                 ),
               ],

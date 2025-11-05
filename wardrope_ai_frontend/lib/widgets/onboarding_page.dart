@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../theme/app_theme.dart';
+import '../utils/theme_aware_image.dart';
 
 class OnboardingPageWidget extends StatelessWidget {
   final VoidCallback onGetStarted;
@@ -12,15 +13,23 @@ class OnboardingPageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF8F9FA),
-            Colors.white,
-          ],
+          colors: isDark
+              ? [
+                  Colors.black,
+                  Colors.black,
+                ]
+              : [
+                  const Color(0xFFF8F9FA),
+                  Colors.white,
+                ],
         ),
       ),
       child: SafeArea(
@@ -31,16 +40,16 @@ class OnboardingPageWidget extends StatelessWidget {
               SizedBox(height: AppTheme.spacingL),
 
               // Logo and App Name
-              _buildAppHeader(),
+              _buildAppHeader(context),
               SizedBox(height: AppTheme.spacingL),
 
               // Onboarding Image
-              _buildOnboardingImage(),
+              _buildOnboardingImage(context),
 
               SizedBox(height: AppTheme.spacingXL),
 
               // Get Started Button
-              _buildGetStartedButton(),
+              _buildGetStartedButton(context),
               SizedBox(height: AppTheme.spacingL),
             ],
           ),
@@ -50,7 +59,11 @@ class OnboardingPageWidget extends StatelessWidget {
   }
 
   
-  Widget _buildAppHeader() {
+  Widget _buildAppHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return Column(
       children: [
         // App Logo
@@ -62,7 +75,7 @@ class OnboardingPageWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusL),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
                 blurRadius: 20,
                 offset: Offset(0, 10.h),
               ),
@@ -70,8 +83,9 @@ class OnboardingPageWidget extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppTheme.radiusL),
-            child: Image.asset(
-              'assets/onboarding/Logo.png',
+            child: ThemeAwareImage.build(
+              context: context,
+              assetPath: 'assets/onboarding/Logo.png',
               width: 120.w,
               height: 120.w,
               fit: BoxFit.contain,
@@ -95,20 +109,21 @@ class OnboardingPageWidget extends StatelessWidget {
 
         // App Name
         Text(
-          'Wardrope.ai',
+          'Wardrobe.ai',
           style: TextStyle(
+            fontFamily: 'Goodly',
             fontSize: AppTheme.displayLargeFontSize,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: textColor,
             letterSpacing: -1,
           ),
         ),
         SizedBox(height: AppTheme.spacingS),
         Text(
           'AI-powered fashion companion',
-          style: TextStyle(
+          style: AppTheme.primaryFont.copyWith(
             fontSize: AppTheme.bodyLargeFontSize,
-            color: Colors.grey.shade600,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -116,18 +131,24 @@ class OnboardingPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildOnboardingImage() {
+  Widget _buildOnboardingImage(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(maxHeight: 300.h),
-      child: Image.asset(
-        'assets/onboarding/Onboarding.png',
+      child: ThemeAwareImage.build(
+        context: context,
+        assetPath: 'assets/onboarding/Onboarding.png',
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {
           return Container(
             height: 200.h,
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(AppTheme.radiusL),
             ),
             child: Center(
@@ -137,13 +158,13 @@ class OnboardingPageWidget extends StatelessWidget {
                   Icon(
                     Icons.image_outlined,
                     size: AppTheme.iconXL,
-                    color: Colors.grey,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                   ),
                   SizedBox(height: AppTheme.spacingS),
                   Text(
                     'Onboarding image not found',
-                    style: TextStyle(
-                      color: Colors.grey,
+                    style: AppTheme.primaryFont.copyWith(
+                      color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                       fontSize: AppTheme.bodyMediumFontSize,
                     ),
                   ),
@@ -156,16 +177,19 @@ class OnboardingPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildGetStartedButton() {
+  Widget _buildGetStartedButton(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       height: AppTheme.buttonHeightL + 4.h,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: isDark ? Colors.white : Colors.black,
         borderRadius: BorderRadius.circular(30.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.2),
             blurRadius: 20,
             offset: Offset(0, 10.h),
           ),
@@ -175,7 +199,7 @@ class OnboardingPageWidget extends StatelessWidget {
         onPressed: onGetStarted,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
+          foregroundColor: isDark ? Colors.black : Colors.white,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30.r),
@@ -184,7 +208,7 @@ class OnboardingPageWidget extends StatelessWidget {
         ),
         child: Text(
           'Get Started',
-          style: TextStyle(
+          style: AppTheme.primaryFont.copyWith(
             fontSize: AppTheme.titleLargeFontSize,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/image_service.dart';
 import '../services/onboarding_service.dart';
+import '../theme/app_theme.dart';
 
 class ModelUploadScreen extends StatefulWidget {
   const ModelUploadScreen({super.key});
@@ -134,12 +135,20 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final appBarColor = theme.appBarTheme.backgroundColor ?? backgroundColor;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.8),
+        backgroundColor: appBarColor.withValues(alpha: 0.8),
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         leading: IconButton(
           onPressed: () async {
             // Mark model upload as completed (user is skipping)
@@ -148,16 +157,16 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
               Navigator.of(context).pushReplacementNamed('/home');
             }
           },
-          icon: const Icon(
+          icon: Icon(
             Icons.close,
-            color: Colors.black,
+            color: textColor,
             size: 24,
           ),
         ),
-        title: const Text(
+        title: Text(
           'Your Model',
-          style: TextStyle(
-            color: Colors.black,
+          style: AppTheme.primaryFont.copyWith(
+            color: textColor,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -185,14 +194,18 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
   }
 
   Widget _buildHeader() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return Column(
       children: [
-        const Text(
+        Text(
           'Take a picture of yourself',
-          style: TextStyle(
+          style: AppTheme.primaryFont.copyWith(
             fontSize: 28,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: textColor,
             height: 1.2,
           ),
           textAlign: TextAlign.center,
@@ -200,9 +213,9 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         const SizedBox(height: 8),
         Text(
           'A full-body photo would work best for optimal results. Stand in a well-lit area with a plain background.',
-          style: TextStyle(
+          style: AppTheme.primaryFont.copyWith(
             fontSize: 16,
-            color: Colors.grey,
+            color: isDark ? Colors.grey.shade400 : Colors.grey,
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -214,16 +227,21 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
   }
 
   Widget _buildDemoPhoto() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 300),
       height: 200,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.05),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -237,23 +255,25 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           errorBuilder: (context, error, stackTrace) {
             return Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.person_outline,
                       size: 48,
-                      color: Colors.grey,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey,
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Demo photo',
-                      style: TextStyle(
-                        color: Colors.grey,
+                      style: AppTheme.primaryFont.copyWith(
+                        color: isDark ? Colors.grey.shade400 : Colors.grey,
                         fontSize: 14,
                       ),
                     ),
@@ -269,12 +289,21 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
 
   
   Widget _buildBottomActions() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final containerColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+    final buttonBgColor = isDark ? Colors.white : Colors.black;
+    final buttonTextColor = isDark ? Colors.black : Colors.white;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: containerColor.withValues(alpha: 0.8),
         border: Border(
           top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: borderColor,
             width: 1,
           ),
         ),
@@ -289,26 +318,27 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
             child: ElevatedButton(
               onPressed: _isProcessing ? null : _takePhoto,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: buttonBgColor,
+                foregroundColor: buttonTextColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24), // Fully rounded
                 ),
-                elevation: 0,
-                disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+                elevation: isDark ? 2 : 0,
+                shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
+                disabledBackgroundColor: buttonBgColor.withValues(alpha: 0.5),
               ),
               child: _isProcessing
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(buttonTextColor),
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Take Photo',
-                      style: TextStyle(
+                      style: AppTheme.primaryFont.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -320,15 +350,15 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
             width: double.infinity,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: borderColor,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -338,7 +368,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
               onPressed: _isProcessing ? null : _pickFromGallery,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
-                foregroundColor: Colors.black,
+                foregroundColor: buttonTextColor,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -351,14 +381,15 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
                   Icon(
                     Icons.photo_library_outlined,
                     size: 20,
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: Colors.brown,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Upload from Gallery',
-                    style: TextStyle(
+                    style: AppTheme.primaryFont.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
+                      color: Colors.brown,
                     ),
                   ),
                 ],
@@ -368,9 +399,9 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           const SizedBox(height: 16),
           Text(
             'By continuing, you agree to our Terms of Service and Privacy Policy.',
-            style: TextStyle(
+            style: AppTheme.primaryFont.copyWith(
               fontSize: 12,
-              color: Colors.grey,
+              color: isDark ? Colors.grey.shade400 : Colors.grey,
             ),
             textAlign: TextAlign.center,
           ),

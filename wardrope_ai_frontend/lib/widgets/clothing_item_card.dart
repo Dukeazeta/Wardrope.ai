@@ -17,22 +17,34 @@ class ClothingItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+    final imageBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.05);
+
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusM),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: Offset(0, 4.h),
             ),
           ],
           border: Border.all(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: borderColor,
             width: 1,
           ),
         ),
@@ -44,7 +56,7 @@ class ClothingItemCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: imageBgColor,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(AppTheme.radiusM),
                   ),
@@ -58,12 +70,12 @@ class ClothingItemCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: imageBgColor,
                         child: Center(
                           child: Icon(
                             Icons.image_outlined,
                             size: AppTheme.iconXL,
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey,
                           ),
                         ),
                       );
@@ -77,7 +89,7 @@ class ClothingItemCard extends StatelessWidget {
                                   loadingProgress.expectedTotalBytes!
                               : null,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.black.withValues(alpha: 0.3),
+                            theme.colorScheme.primary,
                           ),
                         ),
                       );
@@ -99,7 +111,7 @@ class ClothingItemCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: AppTheme.titleMediumFontSize,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: theme.textTheme.bodyLarge?.color ?? Colors.black,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -108,7 +120,7 @@ class ClothingItemCard extends StatelessWidget {
                       item.category,
                       style: TextStyle(
                         fontSize: AppTheme.bodySmallFontSize,
-                        color: Colors.grey.shade600,
+                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
                         fontWeight: FontWeight.w400,
                       ),
                       maxLines: 1,

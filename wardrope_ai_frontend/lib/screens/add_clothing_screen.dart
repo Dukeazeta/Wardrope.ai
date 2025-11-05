@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../models/clothing_item.dart';
 import '../services/image_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/theme_aware_image.dart';
 
 class AddClothingScreen extends StatefulWidget {
   const AddClothingScreen({super.key});
@@ -170,26 +171,34 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final appBarColor = theme.appBarTheme.backgroundColor ?? backgroundColor;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: appBarColor,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(
             Icons.close,
-            color: Colors.black,
+            color: textColor,
             size: AppTheme.iconM,
           ),
         ),
         title: Text(
           'Add Clothing',
-          style: TextStyle(
-            color: Colors.black,
+          style: AppTheme.primaryFont.copyWith(
+            color: textColor,
             fontSize: AppTheme.titleLargeFontSize,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
@@ -199,7 +208,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
             child: Text(
               'Save',
               style: TextStyle(
-                color: Colors.black,
+                color: isDark ? Colors.white : Colors.brown,
                 fontSize: AppTheme.titleMediumFontSize,
                 fontWeight: FontWeight.w600,
               ),
@@ -229,15 +238,18 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
   }
 
   Widget _buildImageSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       height: 250.h,
       constraints: BoxConstraints(maxWidth: 320.w),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.05),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppTheme.radiusM),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -252,13 +264,14 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                 fit: BoxFit.cover,
               )
             else
-              Image.asset(
-                'assets/Add clothes 02.png',
+              ThemeAwareImage.build(
+                context: context,
+                assetPath: 'assets/Add clothes 02.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(AppTheme.radiusM),
                     ),
                     child: Center(
@@ -268,7 +281,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                           Icon(
                             Icons.camera_alt_outlined,
                             size: AppTheme.iconXL,
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey.shade400 : Colors.grey,
                           ),
                           SizedBox(height: AppTheme.spacingS),
                           Text(
@@ -276,7 +289,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                             style: TextStyle(
                               fontSize: AppTheme.bodyLargeFontSize,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey,
+                              color: isDark ? Colors.grey.shade400 : Colors.grey,
                             ),
                           ),
                         ],
@@ -343,15 +356,23 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
 
   
   Widget _buildCategorySection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final containerColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Category',
-          style: TextStyle(
-            fontSize: AppTheme.bodyLargeFontSize,
+          style: AppTheme.primaryFont.copyWith(
+            fontSize: AppTheme.titleMediumFontSize,
             fontWeight: FontWeight.w600,
-            color: Colors.black,
+            color: textColor,
           ),
         ),
         SizedBox(height: AppTheme.spacingS),
@@ -360,7 +381,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
           padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingM),
           decoration: BoxDecoration(
             border: Border.all(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: borderColor,
             ),
             borderRadius: BorderRadius.circular(AppTheme.radiusM),
           ),
@@ -368,10 +389,14 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
             child: DropdownButton<String>(
               value: _selectedCategory,
               isExpanded: true,
+              dropdownColor: containerColor,
               items: categories.map((category) {
                 return DropdownMenuItem<String>(
                   value: category,
-                  child: Text(category),
+                  child: Text(
+                    category,
+                    style: AppTheme.primaryFont.copyWith(color: textColor),
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -389,12 +414,21 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
   }
 
   Widget _buildBottomActions() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final containerColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+    final buttonTextColor = isDark ? Colors.black : Colors.white;
+    final buttonBgColor = isDark ? Colors.white : Colors.black;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: containerColor,
         border: Border(
           top: BorderSide(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: borderColor,
             width: 1,
           ),
         ),
@@ -409,13 +443,14 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
             child: ElevatedButton(
               onPressed: _isProcessing ? null : _takePhoto,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: buttonBgColor,
+                foregroundColor: buttonTextColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                 ),
-                elevation: 0,
-                disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+                elevation: isDark ? 2 : 0,
+                shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
+                disabledBackgroundColor: buttonBgColor.withValues(alpha: 0.5),
               ),
               child: _isProcessing
                   ? SizedBox(
@@ -423,7 +458,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                       height: 20.w,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(buttonTextColor),
                       ),
                     )
                   : Text(
@@ -440,15 +475,15 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
             width: double.infinity,
             height: AppTheme.buttonHeightM,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? Colors.grey.shade800 : Colors.white,
               borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
               border: Border.all(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.2),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -458,7 +493,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
               onPressed: _isProcessing ? null : _pickFromGallery,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
-                foregroundColor: Colors.black,
+                foregroundColor: isDark ? Colors.white : Colors.black,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
@@ -471,7 +506,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                   Icon(
                     Icons.photo_library_outlined,
                     size: AppTheme.iconS,
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7),
                   ),
                   SizedBox(width: AppTheme.spacingS),
                   Text(
@@ -479,6 +514,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
                     style: TextStyle(
                       fontSize: AppTheme.bodyLargeFontSize,
                       fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                 ],
