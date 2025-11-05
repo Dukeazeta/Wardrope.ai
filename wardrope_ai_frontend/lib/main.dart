@@ -5,33 +5,57 @@ import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/main_container.dart';
 import 'screens/model_upload_screen.dart';
+import 'screens/settings_screen.dart';
 import 'bloc/app_bloc.dart';
 import 'bloc/onboarding/onboarding_bloc.dart';
 import 'services/onboarding_service.dart';
+import 'services/theme_service.dart';
 
 void main() {
-  runApp(const WardropeApp());
+  runApp(const WardrobeApp());
 }
 
-class WardropeApp extends StatelessWidget {
-  const WardropeApp({super.key});
+class WardrobeApp extends StatefulWidget {
+  const WardrobeApp({super.key});
+
+  @override
+  State<WardrobeApp> createState() => _WardrobeAppState();
+}
+
+class _WardrobeAppState extends State<WardrobeApp> {
+  final ThemeService _themeService = ThemeService();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService.init();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: AppBlocProvider.providers,
-      child: ScreenUtilInit(
-        designSize: const Size(375, 812), // iPhone X dimensions as base
-        minTextAdapt: true,
-        splitScreenMode: true,
+      child: ListenableBuilder(
+        listenable: _themeService,
         builder: (context, child) {
-          return MaterialApp(
-            title: 'Wardrope.ai',
-            debugShowCheckedModeBanner: false,
-            home: const AppInitializer(),
-            routes: {
-              '/home': (context) => const MainContainer(),
-              '/model': (context) => const ModelUploadScreen(),
+          return ScreenUtilInit(
+            designSize: const Size(375, 812), // iPhone X dimensions as base
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (context, child) {
+              return MaterialApp(
+                title: 'Wardrobe.ai',
+                debugShowCheckedModeBanner: false,
+                theme: _themeService.getLightTheme(),
+                darkTheme: _themeService.getDarkTheme(),
+                themeMode: _themeService.themeMode,
+                home: const AppInitializer(),
+                routes: {
+                  '/home': (context) => const MainContainer(),
+                  '/model': (context) => const ModelUploadScreen(),
+                  '/settings': (context) => SettingsScreen(themeService: _themeService),
+                },
+              );
             },
           );
         },

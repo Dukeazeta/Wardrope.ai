@@ -6,15 +6,20 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'Wardrope.ai',
-          style: TextStyle(
-            color: const Color(0xFF2D3436),
+          'Wardrobe.ai',
+          style: AppTheme.primaryFont.copyWith(
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: AppTheme.displaySmallFontSize,
           ),
@@ -32,19 +37,19 @@ class HomeScreen extends StatelessWidget {
             ),
             SizedBox(height: AppTheme.spacingL),
             Text(
-              'Welcome to Wardrope.ai',
-              style: TextStyle(
+              'Welcome to Wardrobe.ai',
+              style: AppTheme.primaryFont.copyWith(
                 fontSize: AppTheme.displaySmallFontSize,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF2D3436),
+                color: textColor,
               ),
             ),
             SizedBox(height: AppTheme.spacingM),
             Text(
               'Your AI-powered fashion companion',
-              style: TextStyle(
+              style: AppTheme.primaryFont.copyWith(
                 fontSize: AppTheme.bodyLargeFontSize,
-                color: Colors.grey,
+                color: isDark ? Colors.grey.shade400 : Colors.grey,
               ),
             ),
           ],

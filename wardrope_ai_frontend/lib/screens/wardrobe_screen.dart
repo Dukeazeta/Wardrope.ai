@@ -4,6 +4,7 @@ import '../models/clothing_item.dart';
 import '../widgets/clothing_item_card.dart';
 import '../widgets/category_selector.dart';
 import '../theme/app_theme.dart';
+import '../utils/theme_aware_image.dart';
 import '../bloc/wardrobe/wardrobe_bloc.dart';
 import '../bloc/model/model_bloc.dart';
 import '../bloc/navigation/navigation_bloc.dart';
@@ -75,10 +76,12 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     return BlocBuilder<WardrobeBloc, WardrobeState>(
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: Colors.white,
           body: SafeArea(
             child: Column(
               children: [
@@ -94,10 +97,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     children: [
                       Text(
                         'My Wardrobe',
-                        style: TextStyle(
-                          color: Colors.black,
+                        style: AppTheme.primaryFont.copyWith(
+                          color: textColor,
                           fontSize: AppTheme.headlineLargeFontSize,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const Spacer(),
@@ -105,7 +108,7 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                         onPressed: _navigateToAddClothing,
                         icon: Icon(
                           Icons.add,
-                          color: Colors.black,
+                          color: textColor,
                           size: AppTheme.iconM,
                         ),
                       ),
@@ -139,26 +142,39 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
+    return Center(
       child: CircularProgressIndicator(
-        color: Colors.black,
+        color: primaryColor,
       ),
     );
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.displaySmall?.color ?? Colors.black;
+    final subtitleColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+    final iconColor = isDark ? Colors.grey.shade400 : Colors.grey;
+    final containerColor = isDark
+        ? Colors.white.withValues(alpha: 0.05)
+        : Colors.black.withValues(alpha: 0.05);
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingXL),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/Add clothes.png',
+          ThemeAwareImage.build(
+            context: context,
+            assetPath: 'assets/Add clothes.png',
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: containerColor,
                   borderRadius: BorderRadius.circular(AppTheme.radiusL),
                 ),
                 child: Center(
@@ -168,13 +184,13 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                       Icon(
                         Icons.checkroom_outlined,
                         size: AppTheme.iconXXL,
-                        color: Colors.grey,
+                        color: iconColor,
                       ),
                       SizedBox(height: AppTheme.spacingM),
                       Text(
                         'Add clothes image',
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: iconColor,
                           fontSize: AppTheme.bodyMediumFontSize,
                         ),
                       ),
@@ -187,19 +203,19 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           SizedBox(height: AppTheme.spacingXL),
           Text(
             'Your wardrobe is empty',
-            style: TextStyle(
+            style: AppTheme.primaryFont.copyWith(
               fontSize: AppTheme.displaySmallFontSize,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              color: textColor,
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: AppTheme.spacingM),
           Text(
             'Start building your digital wardrobe by adding your favorite clothes',
-            style: TextStyle(
+            style: AppTheme.primaryFont.copyWith(
               fontSize: AppTheme.bodyLargeFontSize,
-              color: Colors.grey.shade600,
+              color: subtitleColor,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -211,17 +227,17 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             child: ElevatedButton(
               onPressed: _navigateToAddClothing,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: isDark ? Colors.white : Colors.black,
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusXXL),
                 ),
-                elevation: 0,
-                shadowColor: Colors.transparent,
+                elevation: isDark ? 2 : 0,
+                shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
               ),
               child: Text(
                 'Add Clothes',
-                style: TextStyle(
+                style: AppTheme.primaryFont.copyWith(
                   fontSize: AppTheme.titleLargeFontSize,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
@@ -262,9 +278,13 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   void _showItemOptions(ClothingItem item) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -284,18 +304,18 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             const SizedBox(height: 20),
             Text(
               item.name,
-              style: const TextStyle(
+              style: AppTheme.primaryFont.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               item.category,
-              style: TextStyle(
+              style: AppTheme.primaryFont.copyWith(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
               ),
             ),
             const SizedBox(height: 24),
@@ -307,10 +327,10 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     Navigator.of(context).pop();
                     // TODO: Edit item using BLoC
                   },
-                  icon: const Icon(Icons.edit, color: Colors.black),
-                  label: const Text(
+                  icon: Icon(Icons.edit, color: textColor),
+                  label: Text(
                     'Edit',
-                    style: TextStyle(color: Colors.black),
+                    style: AppTheme.primaryFont.copyWith(color: textColor),
                   ),
                 ),
                 BlocBuilder<ModelBloc, ModelState>(
@@ -345,9 +365,9 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                     context.read<WardrobeBloc>().add(WardrobeRemoveItem(item.id));
                   },
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  label: const Text(
+                  label: Text(
                     'Delete',
-                    style: TextStyle(color: Colors.red),
+                    style: AppTheme.primaryFont.copyWith(color: Colors.red),
                   ),
                 ),
               ],

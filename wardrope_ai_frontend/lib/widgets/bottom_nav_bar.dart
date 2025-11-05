@@ -38,6 +38,13 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+
     return Container(
       height: 92.h, // Increased to accommodate larger navbar
       decoration: BoxDecoration(
@@ -48,16 +55,24 @@ class _BottomNavBarState extends State<BottomNavBar> {
           width: MediaQuery.of(context).size.width * 0.92,
           height: 76.h,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.circular(20.r), // Less rounded - subtle curve
+            border: Border.all(
+              color: borderColor,
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.black.withValues(alpha: 0.08),
                 blurRadius: 20,
                 offset: Offset(0, 8.h),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.black.withValues(alpha: 0.04),
                 blurRadius: 4,
                 offset: Offset(0, 2.h),
               ),
@@ -170,6 +185,13 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final activeColor = isDark ? Colors.white : Colors.black;
+    final inactiveColor = isDark
+        ? Colors.grey.shade400
+        : Colors.black.withValues(alpha: 0.6);
+
     return GestureDetector(
       onTap: () {
         // Quick scale animation on tap
@@ -189,12 +211,12 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
               height: 56.h,
               margin: EdgeInsets.symmetric(horizontal: 4.w),
               decoration: BoxDecoration(
-                color: widget.isSelected ? Colors.black : Colors.transparent,
+                color: widget.isSelected ? activeColor : Colors.transparent,
                 borderRadius: BorderRadius.circular(20.r), // More rounded to match pill shape
                 boxShadow: widget.isSelected
                     ? [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: activeColor.withValues(alpha: 0.15),
                           blurRadius: 8,
                           offset: Offset(0, 2.h),
                         ),
@@ -208,8 +230,8 @@ class _AnimatedNavItemState extends State<_AnimatedNavItem>
                     widget.isSelected ? widget.activeIcon : widget.icon,
                     size: 24.w,
                     color: widget.isSelected
-                        ? Colors.white
-                        : Colors.black.withValues(alpha: 0.6),
+                        ? isDark ? Colors.black : Colors.white
+                        : inactiveColor,
                   ),
                 ),
               ),
