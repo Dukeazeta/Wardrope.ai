@@ -1,23 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../theme/app_theme.dart';
 
-class AIStylistScreen extends StatelessWidget {
+class AIStylistScreen extends StatefulWidget {
   const AIStylistScreen({super.key});
 
   @override
+  State<AIStylistScreen> createState() => _AIStylistScreenState();
+}
+
+class _AIStylistScreenState extends State<AIStylistScreen> {
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final appBarColor = theme.appBarTheme.backgroundColor ?? backgroundColor;
+    final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+    final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: appBarColor,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        title: const Text(
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
+        title: Text(
           'AI Stylist',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          style: AppTheme.primaryFont.copyWith(
+            color: textColor,
+            fontSize: AppTheme.headlineLargeFontSize,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
@@ -32,12 +51,21 @@ class AIStylistScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: borderColor,
                   width: 1,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -46,31 +74,33 @@ class AIStylistScreen extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(32),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.auto_awesome,
                       size: 32,
-                      color: Colors.black,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Your Personal AI Stylist',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                    style: AppTheme.primaryFont.copyWith(
+                      fontSize: AppTheme.titleMediumFontSize,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Get personalized outfit recommendations powered by AI',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
+                    style: AppTheme.primaryFont.copyWith(
+                      fontSize: AppTheme.bodyMediumFontSize,
+                      color: isDark ? Colors.grey.shade400 : Colors.grey,
                       height: 1.4,
                     ),
                     textAlign: TextAlign.center,
@@ -82,12 +112,12 @@ class AIStylistScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Feature Cards
-            const Text(
+            Text(
               'Features',
-              style: TextStyle(
-                fontSize: 18,
+              style: AppTheme.primaryFont.copyWith(
+                fontSize: AppTheme.headlineSmallFontSize,
                 fontWeight: FontWeight.w600,
-                color: Colors.black,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -137,19 +167,33 @@ class AIStylistScreen extends StatelessWidget {
     required String description,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final subtitleColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
+    final containerColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final borderColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.1);
+    final iconBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : Colors.black.withValues(alpha: 0.06);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: containerColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.1),
+          color: borderColor,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -164,13 +208,13 @@ class AIStylistScreen extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: iconBgColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 size: 24,
-                color: Colors.black,
+                color: textColor,
               ),
             ),
             const SizedBox(width: 16),
@@ -180,18 +224,18 @@ class AIStylistScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: AppTheme.primaryFont.copyWith(
+                      fontSize: AppTheme.titleMediumFontSize,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
+                    style: AppTheme.primaryFont.copyWith(
+                      fontSize: AppTheme.bodySmallFontSize,
+                      color: subtitleColor,
                       height: 1.3,
                     ),
                   ),
@@ -201,7 +245,7 @@ class AIStylistScreen extends StatelessWidget {
             Icon(
               Icons.chevron_right,
               size: 20,
-              color: Colors.grey.shade400,
+              color: subtitleColor,
             ),
           ],
         ),

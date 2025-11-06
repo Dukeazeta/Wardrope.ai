@@ -16,6 +16,10 @@ class CategorySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+
     return Container(
       height: 60.h,
       padding: EdgeInsets.symmetric(vertical: AppTheme.spacingS),
@@ -35,17 +39,21 @@ class CategorySelector extends StatelessWidget {
               onSelected: (selected) {
                 onCategorySelected(category);
               },
-              backgroundColor: Colors.black.withValues(alpha: 0.05),
-              selectedColor: Colors.black,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+              backgroundColor: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
+              selectedColor: textColor,
+              labelStyle: AppTheme.primaryFont.copyWith(
+                color: isSelected ? Colors.white : textColor,
                 fontWeight: FontWeight.w500,
                 fontSize: AppTheme.bodyMediumFontSize,
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusXL),
                 side: BorderSide(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : Colors.black.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
