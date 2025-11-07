@@ -24,7 +24,7 @@ class ModelUploadRequested extends ModelEvent {
   const ModelUploadRequested({
     required this.imageFile,
     this.userId,
-    this.modelType = ModelService.modelTypeUser,
+    this.modelType = 'user',
   });
 
   @override

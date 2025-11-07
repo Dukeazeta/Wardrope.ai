@@ -4,10 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../models/clothing_item.dart';
-import '../services/image_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/theme_aware_image.dart';
+import '../services/image_processing_service.dart';
 
 class AddClothingScreen extends StatefulWidget {
   const AddClothingScreen({super.key});
@@ -102,22 +101,31 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
     if (_imageFile == null) return;
 
     try {
-      final result = await ImageService.processImage(_imageFile!);
+      final result = await ImageProcessingService.processClothingItemComplete(
+        imageFile: _imageFile!,
+        name: 'New Item',
+        category: _selectedCategory,
+        style: 'casual',
+        onProgress: (progress) {
+          // You could update a progress indicator here
+        },
+        onStatus: (status) {
+          // You could update a status text here
+        },
+      );
 
-      if (result['success'] == true) {
-        // Image processed successfully, URL would be available if needed
-        // final processedImageUrl = result['processedImageUrl'] as String?;
-
+      if (result['success']) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Image processed successfully!'),
+              content: Text('Clothing item processed and saved successfully!'),
               backgroundColor: Colors.green,
             ),
           );
+          Navigator.of(context).pop(true); // Return to previous screen
         }
       } else {
-        throw Exception(result['message'] ?? 'Processing failed');
+        _showErrorDialog('Failed to process clothing item: ${result['error']}');
       }
     } catch (e) {
       _showErrorDialog('Failed to process image: $e');
@@ -144,31 +152,7 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
     );
   }
 
-  void _saveClothingItem() {
-    if (_imageFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add an image for your clothing item'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final clothingItem = ClothingItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _selectedCategory, // Use category as name since we removed name input
-      category: _selectedCategory,
-      imageUrl: 'processed_image_url', // This would come from the backend
-      originalImagePath: _imageFile!.path,
-      createdAt: DateTime.now(),
-    );
-
-    Navigator.of(context).pop({
-      'clothingItem': clothingItem,
-    });
-  }
-
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -202,19 +186,6 @@ class _AddClothingScreenState extends State<AddClothingScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _saveClothingItem,
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.brown,
-                fontSize: AppTheme.titleMediumFontSize,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [

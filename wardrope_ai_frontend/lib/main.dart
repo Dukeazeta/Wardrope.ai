@@ -6,6 +6,7 @@ import 'screens/splash_screen.dart';
 import 'screens/main_container.dart';
 import 'screens/model_upload_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/debug_screen.dart';
 import 'bloc/app_bloc.dart';
 import 'bloc/onboarding/onboarding_bloc.dart';
 import 'services/onboarding_service.dart';
@@ -54,6 +55,7 @@ class _WardrobeAppState extends State<WardrobeApp> {
                   '/home': (context) => const MainContainer(),
                   '/model': (context) => const ModelUploadScreen(),
                   '/settings': (context) => SettingsScreen(themeService: _themeService),
+                  '/debug': (context) => const DebugScreen(),
                 },
               );
             },

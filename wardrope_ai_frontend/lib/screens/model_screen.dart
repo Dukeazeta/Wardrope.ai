@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import '../bloc/model/model_bloc.dart';
-import '../services/model_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/theme_aware_image.dart';
 
@@ -245,7 +244,7 @@ class _ModelScreenState extends State<ModelScreen> {
 
   Widget _buildBase64Image(String base64Url) {
     try {
-      final pureBase64 = ModelService.extractBase64FromDataUrl(base64Url);
+      final pureBase64 = _extractBase64FromDataUrl(base64Url);
 
       return Image.memory(
         const Base64Decoder().convert(pureBase64),
@@ -470,5 +469,12 @@ class _ModelScreenState extends State<ModelScreen> {
         ),
       ],
     );
+  }
+
+  // Helper method to extract base64 from data URL
+  String _extractBase64FromDataUrl(String dataUrl) {
+    final RegExp regExp = RegExp(r'data:image/[^;]+;base64,(.+)');
+    final match = regExp.firstMatch(dataUrl);
+    return match?.group(1) ?? '';
   }
 }

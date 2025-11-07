@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../services/model_service.dart';
+import '../../services/local_storage_service.dart';
+import '../../services/image_processing_service.dart';
+import '../../services/hybrid_ai_service.dart';
 
 part 'model_event.dart';
 part 'model_state.dart';
@@ -33,39 +35,28 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ));
 
     try {
-      final response = await ModelService.getUserModels(event.userId);
+      // Load models from local storage
+      final result = await LocalStorageService.getUserModels();
 
-      if (response['success'] == true) {
-        final List<dynamic> modelsData = response['models'] ?? [];
-        final List<ModelData> models = modelsData
-            .map((modelJson) => ModelData.fromJson(modelJson))
-            .toList();
-
-        // Find the most recent processed model to set as current
-        ModelData? currentModel;
-        for (final model in models) {
-          if (model.isProcessed) {
-            if (currentModel == null || model.updatedAt.isAfter(currentModel.updatedAt)) {
-              currentModel = model;
-            }
-          }
-        }
+      if (result['success']) {
+        final models = result['data'];
+        final userModels = models.map((model) => ModelData.fromJson(model)).toList();
 
         emit(state.copyWith(
           status: ModelStatus.loaded,
-          userModels: models,
-          currentModel: currentModel,
+          userModels: userModels,
+          currentModel: userModels.isNotEmpty ? userModels.first : null,
         ));
       } else {
         emit(state.copyWith(
           status: ModelStatus.error,
-          errorMessage: response['message'] ?? 'Failed to load models',
+          errorMessage: 'Failed to load models: ${result['error']}',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: ModelStatus.error,
-        errorMessage: 'Error loading models: $e',
+        errorMessage: 'Unexpected error: ${e.toString()}',
       ));
     }
   }
@@ -80,17 +71,23 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ));
 
     try {
-      final response = await ModelService.uploadModel(
+      // Process model with hybrid service
+      final result = await ImageProcessingService.processModelComplete(
         imageFile: event.imageFile,
-        userId: event.userId,
+        name: event.modelType == 'user' ? 'User Model' : 'Generated Model',
         modelType: event.modelType,
+        onProgress: (progress) {
+          // You could emit progress state here if needed
+        },
+        onStatus: (status) {
+          // You could emit status updates here if needed
+        },
       );
 
-      if (response['success'] == true) {
-        final Map<String, dynamic> modelDataJson = response['modelData'];
-        final ModelData newModel = ModelData.fromJson(modelDataJson);
+      if (result['success']) {
+        final modelData = result['data']['user_model'];
+        final newModel = ModelData.fromJson(modelData);
 
-        // Update user models list
         final updatedModels = [...state.userModels, newModel];
 
         emit(state.copyWith(
@@ -99,21 +96,16 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
           currentModel: newModel,
           currentOutfitImage: null, // Clear any existing outfit
         ));
-
-        // If userId was provided, refresh the models list
-        if (event.userId != null) {
-          add(ModelRefresh(event.userId!));
-        }
       } else {
         emit(state.copyWith(
           status: ModelStatus.error,
-          errorMessage: response['message'] ?? 'Failed to upload model',
+          errorMessage: 'Failed to process model: ${result['error']}',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: ModelStatus.error,
-        errorMessage: 'Error uploading model: $e',
+        errorMessage: 'Unexpected error: ${e.toString()}',
       ));
     }
   }
@@ -125,7 +117,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     add(ModelUploadRequested(
       imageFile: event.imageFile,
       userId: event.userId,
-      modelType: ModelService.modelTypeUser,
+      modelType: 'user',
     ));
   }
 
@@ -136,7 +128,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     add(ModelUploadRequested(
       imageFile: event.imageFile,
       userId: event.userId,
-      modelType: ModelService.modelTypeUser,
+      modelType: 'user',
     ));
   }
 
@@ -155,9 +147,11 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     Emitter<ModelState> emit,
   ) async {
     try {
-      final response = await ModelService.deleteModel(event.modelId);
+      // Delete from local storage
+      final result = await LocalStorageService.deleteUserModel(event.modelId);
 
-      if (response['success'] == true) {
+      if (result['success']) {
+        // Remove from current state
         final updatedModels = state.userModels
             .where((model) => model.id != event.modelId)
             .toList();
@@ -176,13 +170,13 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
       } else {
         emit(state.copyWith(
           status: ModelStatus.error,
-          errorMessage: response['message'] ?? 'Failed to delete model',
+          errorMessage: 'Failed to delete model: ${result['error']}',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: ModelStatus.error,
-        errorMessage: 'Error deleting model: $e',
+        errorMessage: 'Unexpected error: ${e.toString()}',
       ));
     }
   }
@@ -205,30 +199,47 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ));
 
     try {
-      final response = await ModelService.applyOutfitToModel(
-        modelId: event.modelId,
-        clothingItemId: event.clothingItemId,
-        outfitData: event.outfitData,
+      // Create outfit using hybrid service
+      final result = await ImageProcessingService.createOutfitWithVisualization(
+        name: 'Quick Outfit',
+        occasion: 'Casual',
+        style: 'Everyday',
+        clothingItemIds: [event.clothingItemId],
+        modelImage: File(state.currentModel!.originalImageUrl),
+        description: 'Outfit created with model fitting',
+        onProgress: (progress) {
+          // Progress updates could be handled here
+        },
+        onStatus: (status) {
+          // Status updates could be handled here
+        },
       );
 
-      if (response['success'] == true) {
+      if (result['success']) {
+        final outfitData = result['data']['outfit'];
+        final visualizationUrl = result['data']['visualization']?['visualization_url'];
+
         emit(state.copyWith(
           isProcessingOutfit: false,
-          currentOutfitImage: response['resultImageUrl'],
-          outfitMetadata: response['metadata'],
+          currentOutfitImage: visualizationUrl ?? 'outfit_created.jpg',
+          outfitMetadata: {
+            'processed': true,
+            'outfit_id': outfitData['id'],
+            'created_at': DateTime.now().toIso8601String(),
+          },
         ));
       } else {
         emit(state.copyWith(
-          status: ModelStatus.error,
           isProcessingOutfit: false,
-          errorMessage: response['message'] ?? 'Failed to apply outfit',
+          status: ModelStatus.error,
+          errorMessage: 'Failed to create outfit: ${result['error']}',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
-        status: ModelStatus.error,
         isProcessingOutfit: false,
-        errorMessage: 'Error applying outfit: $e',
+        status: ModelStatus.error,
+        errorMessage: 'Outfit application failed: ${e.toString()}',
       ));
     }
   }
@@ -248,18 +259,24 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     Emitter<ModelState> emit,
   ) async {
     try {
-      final response = await ModelService.checkServiceStatus();
+      // Check hybrid AI service status
+      final result = await HybridAIService.checkStatus();
 
-      if (response['success'] != true) {
+      if (result['success']) {
+        // Service is available, could emit status if needed
+        emit(state.copyWith(
+          status: ModelStatus.loaded,
+        ));
+      } else {
         emit(state.copyWith(
           status: ModelStatus.error,
-          errorMessage: 'Model service is unavailable',
+          errorMessage: 'AI service unavailable: ${result['error']}',
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: ModelStatus.error,
-        errorMessage: 'Model service check failed: $e',
+        errorMessage: 'Service check failed: ${e.toString()}',
       ));
     }
   }
@@ -280,4 +297,61 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
   // Helper method to get processed models only
   List<ModelData> get processedModels =>
       state.userModels.where((model) => model.isProcessed).toList();
+}
+
+// Model data class for better type safety
+class ModelData {
+  final String id;
+  final String? userId;
+  final String originalImageUrl;
+  final String? processedImageUrl;
+  final String modelType;
+  final String status;
+  final Map<String, dynamic>? metadata;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  ModelData({
+    required this.id,
+    this.userId,
+    required this.originalImageUrl,
+    this.processedImageUrl,
+    required this.modelType,
+    required this.status,
+    this.metadata,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ModelData.fromJson(Map<String, dynamic> json) {
+    return ModelData(
+      id: json['id'],
+      userId: json['userId'],
+      originalImageUrl: json['originalImageUrl'],
+      processedImageUrl: json['processedImageUrl'],
+      modelType: json['modelType'],
+      status: json['status'],
+      metadata: json['metadata'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'originalImageUrl': originalImageUrl,
+      'processedImageUrl': processedImageUrl,
+      'modelType': modelType,
+      'status': status,
+      'metadata': metadata,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
+  bool get isProcessed => status == 'completed' && processedImageUrl != null;
+  bool get isProcessing => status == 'processing';
+  bool get hasFailed => status == 'failed';
 }

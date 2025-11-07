@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../services/image_service.dart';
 import '../services/onboarding_service.dart';
+import '../services/image_processing_service.dart';
 import '../theme/app_theme.dart';
 
 class ModelUploadScreen extends StatefulWidget {
@@ -75,8 +75,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
     });
 
     try {
-      // TODO: Integrate with backend API for image processing
-      // This will call the Google Gen AI (nano) model for background removal
+      // Process model using hybrid AI service (Google Gemini + local storage)
       await _uploadImageForProcessing(_imageFile!);
     } catch (e) {
       _showErrorDialog('Failed to process image: $e');
@@ -89,31 +88,42 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
 
   Future<void> _uploadImageForProcessing(File imageFile) async {
     try {
-      final result = await ImageService.processImage(imageFile);
+      // Process model using hybrid AI service
+      final result = await ImageProcessingService.processModelComplete(
+        imageFile: imageFile,
+        name: 'User Model',
+        modelType: 'user',
+        onProgress: (progress) {
+          // You could update a progress bar here if needed
+        },
+        onStatus: (status) {
+          // You could update status text here if needed
+        },
+      );
 
-      if (result['success'] == true) {
-        // Show success message
+      if (!result['success']) {
+        throw Exception(result['error'] ?? 'Unknown processing error');
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Model processed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Mark model upload as completed
+        await OnboardingService.markModelUploadCompleted();
+
+        // Navigate to wardrobe screen with processed model data
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Image processed successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Mark model upload as completed
-          await OnboardingService.markModelUploadCompleted();
-
-          // Navigate to wardrobe screen with processed image data
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
+          Navigator.of(context).pushReplacementNamed('/home');
         }
-      } else {
-        throw Exception(result['message'] ?? 'Processing failed');
       }
     } catch (e) {
-      _showErrorDialog('Failed to process image: $e');
+      _showErrorDialog('Failed to process model: $e');
     }
   }
 
@@ -172,7 +182,19 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
           ),
         ),
         centerTitle: true,
-        actions: const [SizedBox(width: 40)], // Balance the back button
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed('/debug');
+            },
+            icon: Icon(
+              Icons.bug_report,
+              color: textColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 40), // Balance the back button
+        ],
       ),
       body: Column(
         children: [

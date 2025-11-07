@@ -11,7 +11,6 @@ import { hybridSQLiteService } from './libs/sqlite';
 dotenv.config();
 
 const app: Application = express();
-const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
 // Middleware
 app.use(helmet({
@@ -70,7 +69,7 @@ app.use('/api', routes);
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler - Fixed to use proper regex pattern
+// 404 handler
 app.use((req: Request, res: Response<ErrorResponse>) => {
   res.status(404).json({
     error: 'Route not found',
@@ -78,36 +77,24 @@ app.use((req: Request, res: Response<ErrorResponse>) => {
   });
 });
 
-// Initialize hybrid services and start server
-async function startServer() {
-  try {
-    // Initialize SQLite database
-    await hybridSQLiteService.initialize();
-    console.log('✅ Hybrid SQLite database initialized');
+// Initialize services for serverless environment
+let servicesInitialized = false;
 
-    // Start server
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🌐 Network access: http://0.0.0.0:${PORT}`);
-      console.log(`📱 Flutter should connect to: http://10.0.2.2:${PORT}`);
-      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🤖 Hybrid Architecture: ENABLED`);
-      console.log(`💾 Local Storage: SQLite`);
-      console.log(`🧠 AI Service: Google Gemini`);
-
-      if (process.env.GEMINI_API_KEY) {
-        console.log(`✅ AI Service: Configured`);
-      } else {
-        console.log(`⚠️  AI Service: GEMINI_API_KEY not configured`);
-      }
-    });
-  } catch (error) {
-    console.error('❌ Failed to initialize server:', error);
-    process.exit(1);
+async function ensureServicesInitialized() {
+  if (!servicesInitialized) {
+    try {
+      await hybridSQLiteService.initialize();
+      console.log('✅ Hybrid SQLite database initialized');
+      servicesInitialized = true;
+    } catch (error) {
+      console.error('❌ Failed to initialize services:', error);
+      throw error;
+    }
   }
 }
 
-startServer();
-
-export default app;
+// Export for Vercel
+export default async (req: Request, res: Response) => {
+  await ensureServicesInitialized();
+  return app(req, res);
+};
