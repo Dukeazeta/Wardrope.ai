@@ -40,7 +40,7 @@ class HybridAIService {
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
   }
 
   /**
@@ -431,7 +431,7 @@ class HybridAIService {
         success: true,
         data: {
           status: 'available',
-          model: 'gemini-2.5-flash',
+          model: 'gemini-2.5-flash-image',
           testResponse: text,
           configuredAt: new Date().toISOString()
         }

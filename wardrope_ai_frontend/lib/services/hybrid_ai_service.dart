@@ -13,8 +13,8 @@ class HybridAIService {
       if (await _isRunningOnEmulator()) {
         return 'http://10.0.2.2:3000/api/simplified-ai';
       } else {
-        // Physical device - use production URL
-        return 'https://wardrope-ai-backend.vercel.app/api/simplified-ai';
+        // Physical device - use your computer's local IP address
+        return 'http://10.100.179.172:3000/api/simplified-ai';
       }
     } else {
       return 'http://localhost:3000/api/simplified-ai';
@@ -34,7 +34,7 @@ class HybridAIService {
     }
   }
 
-  static const Duration _timeout = Duration(seconds: 60);
+  static const Duration _timeout = Duration(seconds: 120);
 
   /// Check AI service availability
   static Future<Map<String, dynamic>> checkStatus() async {

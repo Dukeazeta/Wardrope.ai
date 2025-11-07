@@ -20,13 +20,16 @@ class _DebugScreenState extends State<DebugScreen> {
     _updateBaseUrl();
   }
 
-  void _updateBaseUrl() {
+  void _updateBaseUrl() async {
+    final baseUrl = await HybridAIService.baseUrl;
     setState(() {
-      _baseUrl = AppConfig.baseUrl;
+      _baseUrl = baseUrl;
     });
   }
 
   Future<void> _testConnection() async {
+    if (!mounted) return;
+
     setState(() {
       _isTesting = true;
       _result = 'Testing connection...\n';
@@ -35,6 +38,8 @@ class _DebugScreenState extends State<DebugScreen> {
     try {
       final result = await HybridAIService.checkStatus();
 
+      if (!mounted) return;
+
       setState(() {
         _result += '✅ Connection successful!\n\n';
         _result += 'Status Code: ${result['success'] ? 'SUCCESS' : 'FAILED'}\n';
@@ -42,6 +47,8 @@ class _DebugScreenState extends State<DebugScreen> {
         _result += 'Response:\n${result.toString()}';
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _result += '❌ Connection failed!\n\n';
         _result += 'Error: $e\n\n';
@@ -60,6 +67,8 @@ class _DebugScreenState extends State<DebugScreen> {
         _result += '• CORS configured? Backend should accept your IP\n';
       });
     } finally {
+      if (!mounted) return;
+
       setState(() {
         _isTesting = false;
       });

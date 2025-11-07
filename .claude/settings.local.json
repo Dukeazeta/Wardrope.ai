@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:dart.dev)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:frog.dev)",
+      "WebFetch(domain:serverpod.dev)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

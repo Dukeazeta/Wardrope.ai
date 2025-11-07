@@ -18,7 +18,7 @@ class AppConfig {
   static const String appVersion = '1.0.0';
 
   // API timeout
-  static const Duration apiTimeout = Duration(seconds: 60);
+  static const Duration apiTimeout = Duration(seconds: 120);
 
   // Feature flags
   static const bool enableDebugMode = true;

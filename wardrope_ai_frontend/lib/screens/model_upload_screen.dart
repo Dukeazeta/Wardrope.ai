@@ -38,14 +38,16 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         imageQuality: 85,
       );
 
-      if (photo != null) {
+      if (photo != null && mounted) {
         setState(() {
           _imageFile = File(photo.path);
         });
         await _processImage();
       }
     } catch (e) {
-      _showErrorDialog('Failed to take photo: $e');
+      if (mounted) {
+        _showErrorDialog('Failed to take photo: $e');
+      }
     }
   }
 
@@ -56,19 +58,21 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
         imageQuality: 85,
       );
 
-      if (image != null) {
+      if (image != null && mounted) {
         setState(() {
           _imageFile = File(image.path);
         });
         await _processImage();
       }
     } catch (e) {
-      _showErrorDialog('Failed to pick image: $e');
+      if (mounted) {
+        _showErrorDialog('Failed to pick image: $e');
+      }
     }
   }
 
   Future<void> _processImage() async {
-    if (_imageFile == null) return;
+    if (_imageFile == null || !mounted) return;
 
     setState(() {
       _isProcessing = true;
@@ -78,11 +82,15 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
       // Process model using hybrid AI service (Google Gemini + local storage)
       await _uploadImageForProcessing(_imageFile!);
     } catch (e) {
-      _showErrorDialog('Failed to process image: $e');
+      if (mounted) {
+        _showErrorDialog('Failed to process image: $e');
+      }
     } finally {
-      setState(() {
-        _isProcessing = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
     }
   }
 
@@ -128,6 +136,8 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
   }
 
   void _showErrorDialog(String message) {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -248,6 +258,7 @@ class _ModelUploadScreenState extends State<ModelUploadScreen> {
     );
   }
 
+  
   Widget _buildDemoPhoto() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
