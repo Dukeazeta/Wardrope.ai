@@ -16,11 +16,15 @@ const app: Application = express();
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+// CORS configuration - allow all origins for both development and production
+// In production, you may want to restrict this to specific domains
 app.use(cors({
-  origin: true, // Allow all origins for development
+  origin: process.env.CORS_ORIGIN || true, // Allow all origins, or use env var for specific origin
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'X-Custom-Header'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400 // 24 hours
 }));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));

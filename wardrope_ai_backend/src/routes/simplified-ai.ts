@@ -7,19 +7,30 @@ import { simplifiedAIController } from '../controllers/SimplifiedAIController';
 const router = Router();
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+// Use memory storage for Vercel serverless (filesystem is read-only except /tmp)
+// For local development, we can optionally use disk storage
+const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
+let storage: multer.StorageEngine;
+if (isVercel) {
+  // Use memory storage for Vercel
+  storage = multer.memoryStorage();
+} else {
+  // Use disk storage for local development
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+  });
+}
 
 const upload = multer({
   storage,

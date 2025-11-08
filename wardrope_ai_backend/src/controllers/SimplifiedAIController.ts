@@ -58,7 +58,10 @@ export class SimplifiedAIController {
       };
 
       const aiService = hybridAIService();
-      const result = await aiService.processUserModel(req.file.path, options);
+      // Handle both memory storage (Vercel) and disk storage (local)
+      // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
+      const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
+      const result = await aiService.processUserModel(imageInput, options);
 
       if (result.success) {
         res.json({
@@ -105,7 +108,10 @@ export class SimplifiedAIController {
       };
 
       const aiService = hybridAIService();
-      const result = await aiService.processClothingItem(req.file.path, options);
+      // Handle both memory storage (Vercel) and disk storage (local)
+      // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
+      const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
+      const result = await aiService.processClothingItem(imageInput, options);
 
       if (result.success) {
         res.json({

@@ -45,10 +45,21 @@ class HybridAIService {
 
   /**
    * Process user model photo for better outfit fitting
+   * Accepts either a file path (string) or a buffer
    */
-  async processUserModel(imagePath: string, options: ProcessModelOptions = {}): Promise<AIProcessResult> {
+  async processUserModel(imagePathOrBuffer: string | Buffer, options: ProcessModelOptions = {}): Promise<AIProcessResult> {
     try {
-      const imageBuffer = fs.readFileSync(imagePath);
+      // Handle both file path and buffer
+      let imageBuffer: Buffer;
+      let imagePath: string | undefined;
+      
+      if (Buffer.isBuffer(imagePathOrBuffer)) {
+        imageBuffer = imagePathOrBuffer;
+      } else {
+        imagePath = imagePathOrBuffer;
+        imageBuffer = fs.readFileSync(imagePath);
+      }
+      
       const imageBase64 = imageBuffer.toString('base64');
 
       let prompt = `Process this user model photo for wardrobe management and outfit visualization.
@@ -97,7 +108,7 @@ class HybridAIService {
             success: true,
             data: data,
             metadata: {
-              originalPath: imagePath,
+              originalPath: imagePath || 'buffer',
               processedAt: new Date().toISOString(),
               options: options
             }
@@ -109,7 +120,7 @@ class HybridAIService {
           success: true,
           data: { processedText: text },
           metadata: {
-            originalPath: imagePath,
+            originalPath: imagePath || 'buffer',
             processedAt: new Date().toISOString(),
             options: options,
             note: 'Raw text response due to JSON parsing failure'
@@ -133,10 +144,21 @@ class HybridAIService {
 
   /**
    * Process clothing item for better catalog management
+   * Accepts either a file path (string) or a buffer
    */
-  async processClothingItem(imagePath: string, options: ProcessClothingOptions = {}): Promise<AIProcessResult> {
+  async processClothingItem(imagePathOrBuffer: string | Buffer, options: ProcessClothingOptions = {}): Promise<AIProcessResult> {
     try {
-      const imageBuffer = fs.readFileSync(imagePath);
+      // Handle both file path and buffer
+      let imageBuffer: Buffer;
+      let imagePath: string | undefined;
+      
+      if (Buffer.isBuffer(imagePathOrBuffer)) {
+        imageBuffer = imagePathOrBuffer;
+      } else {
+        imagePath = imagePathOrBuffer;
+        imageBuffer = fs.readFileSync(imagePath);
+      }
+      
       const imageBase64 = imageBuffer.toString('base64');
 
       let prompt = `Process this clothing item image for wardrobe catalog management.
@@ -187,7 +209,7 @@ class HybridAIService {
             success: true,
             data: data,
             metadata: {
-              originalPath: imagePath,
+              originalPath: imagePath || 'buffer',
               processedAt: new Date().toISOString(),
               options: options
             }
@@ -198,7 +220,7 @@ class HybridAIService {
           success: true,
           data: { processedText: text },
           metadata: {
-            originalPath: imagePath,
+            originalPath: imagePath || 'buffer',
             processedAt: new Date().toISOString(),
             options: options,
             note: 'Raw text response due to JSON parsing failure'

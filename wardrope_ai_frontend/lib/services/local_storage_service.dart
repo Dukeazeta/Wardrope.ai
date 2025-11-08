@@ -1,17 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 
 class LocalStorageService {
-  static String get _baseUrl {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api/local';
-    } else {
-      return 'http://localhost:3000/api/local';
-    }
-  }
+  // Use unified configuration from AppConfig
+  static String get _baseUrl => AppConfig.localStorageBaseUrl;
 
-  static const Duration _timeout = Duration(seconds: 30);
+  static Duration get _timeout => AppConfig.apiTimeout;
 
   // User Management Methods
 

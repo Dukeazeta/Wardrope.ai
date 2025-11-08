@@ -3,46 +3,24 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
+import '../config/app_config.dart';
 
 class HybridAIService {
   static final Logger _logger = Logger();
 
-  static Future<String> get baseUrl async {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      // Check if running on emulator or physical device
-      if (await _isRunningOnEmulator()) {
-        return 'http://10.0.2.2:3000/api/simplified-ai';
-      } else {
-        // Physical device - use your computer's local IP address
-        return 'http://10.100.179.172:3000/api/simplified-ai';
-      }
-    } else {
-      return 'http://localhost:3000/api/simplified-ai';
-    }
-  }
+  // Use unified configuration from AppConfig
+  static String get baseUrl => AppConfig.simplifiedAIBaseUrl;
 
-  static Future<String> get _baseUrl async => await baseUrl;
-
-  static Future<bool> _isRunningOnEmulator() async {
-    // Check if running on Android emulator
-    try {
-      final result = await Process.run('getprop', ['ro.kernel.qemu']);
-      return result.exitCode == 0;
-    } catch (e) {
-      // If we can't check, assume it's a physical device
-      return false;
-    }
-  }
-
-  static const Duration _timeout = Duration(seconds: 120);
+  static Duration get _timeout => AppConfig.apiTimeout;
 
   /// Check AI service availability
   static Future<Map<String, dynamic>> checkStatus() async {
     try {
-      final baseUrl = await _baseUrl;
+      final url = baseUrl;
+      _logger.i('Checking AI service status at: $url');
       final response = await http
           .get(
-            Uri.parse('$baseUrl/status'),
+            Uri.parse('$url/status'),
           ).timeout(_timeout);
 
       if (response.statusCode == 200) {
@@ -79,11 +57,12 @@ class HybridAIService {
       onStatus?.call('Preparing image...');
       onProgress?.call(0.1);
 
-      final baseUrl = await _baseUrl;
+      final url = baseUrl;
+      _logger.i('Processing user model at: $url/process-model');
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/process-model'),
+        Uri.parse('$url/process-model'),
       );
 
       // Add image file
@@ -150,11 +129,12 @@ class HybridAIService {
       onStatus?.call('Preparing image...');
       onProgress?.call(0.1);
 
-      final baseUrl = await _baseUrl;
+      final url = baseUrl;
+      _logger.i('Processing clothing item at: $url/process-clothing');
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/process-clothing'),
+        Uri.parse('$url/process-clothing'),
       );
 
       // Add image file
@@ -244,10 +224,11 @@ class HybridAIService {
       onProgress?.call(0.3);
 
       // Send request
-      final baseUrl = await _baseUrl;
+      final url = baseUrl;
+      _logger.i('Generating outfit visualization at: $url/generate-outfit');
       final response = await http
           .post(
-            Uri.parse('$baseUrl/generate-outfit'),
+            Uri.parse('$url/generate-outfit'),
             headers: {'Content-Type': 'application/json'},
             body: json.encode(requestBody),
           )
@@ -305,10 +286,11 @@ class HybridAIService {
       onProgress?.call(0.5);
 
       // Send request
-      final baseUrl = await _baseUrl;
+      final url = baseUrl;
+      _logger.i('Getting style recommendations at: $url/recommendations');
       final response = await http
           .post(
-            Uri.parse('$baseUrl/recommendations'),
+            Uri.parse('$url/recommendations'),
             headers: {'Content-Type': 'application/json'},
             body: json.encode(requestBody),
           )

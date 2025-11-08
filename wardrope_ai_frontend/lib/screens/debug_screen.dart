@@ -20,8 +20,8 @@ class _DebugScreenState extends State<DebugScreen> {
     _updateBaseUrl();
   }
 
-  void _updateBaseUrl() async {
-    final baseUrl = await HybridAIService.baseUrl;
+  void _updateBaseUrl() {
+    final baseUrl = HybridAIService.baseUrl;
     setState(() {
       _baseUrl = baseUrl;
     });
@@ -53,18 +53,21 @@ class _DebugScreenState extends State<DebugScreen> {
         _result += '❌ Connection failed!\n\n';
         _result += 'Error: $e\n\n';
         _result += 'Base URL attempted: $_baseUrl\n\n';
-        _result += '🔧 PHYSICAL DEVICE SETUP:\n';
-        _result += '1. Find your computer\'s IP address:\n';
-        _result += '   - Windows: Open Command Prompt and run "ipconfig"\n';
-        _result += '   - Mac/Linux: Open Terminal and run "ifconfig" or "ip addr"\n';
-        _result += '2. Look for "IPv4 Address" (usually 192.168.x.x or 10.0.x.x)\n';
-        _result += '3. Update the IP in hybrid_ai_service.dart line 15\n';
-        _result += '4. Make sure your phone and computer are on same WiFi network\n\n';
+        _result += '🔧 CONFIGURATION:\n';
+        _result += 'Current Environment: ${AppConfig.isDevelopment ? "Development" : "Production"}\n';
+        _result += 'Base URL: $_baseUrl\n\n';
+        _result += '🔧 DEVELOPMENT SETUP:\n';
+        _result += '1. Set _isDevelopment = true in lib/config/app_config.dart\n';
+        _result += '2. Update _devSimplifiedAIBaseUrl with your local IP\n';
+        _result += '3. Find your computer\'s IP:\n';
+        _result += '   - Windows: "ipconfig" in Command Prompt\n';
+        _result += '   - Mac/Linux: "ifconfig" or "ip addr" in Terminal\n';
+        _result += '4. Make sure phone and computer are on same WiFi\n\n';
         _result += '🔥 Troubleshooting:\n';
-        _result += '• Backend server running? Check: http://localhost:3000/health\n';
-        _result += '• Firewall blocking? Allow port 3000 through\n';
-        _result += '• Same WiFi network? Phone and computer must be connected\n';
-        _result += '• CORS configured? Backend should accept your IP\n';
+        _result += '• Backend running? Check: http://localhost:3000/health\n';
+        _result += '• Firewall blocking? Allow port 3000\n';
+        _result += '• Production URL correct? Check Vercel deployment\n';
+        _result += '• CORS configured? Backend allows all origins\n';
       });
     } finally {
       if (!mounted) return;
