@@ -99,6 +99,29 @@ async function ensureServicesInitialized() {
 
 // Export for Vercel
 export default async (req: Request, res: Response) => {
-  await ensureServicesInitialized();
-  return app(req, res);
+  try {
+    // Initialize services (only once per cold start)
+    await ensureServicesInitialized();
+  } catch (error) {
+    // If initialization fails, send error response and return early
+    console.error('Function invocation failed during initialization:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Service initialization failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+    return;
+  }
+  
+  // Wrap Express app call in a Promise to ensure Vercel waits for response
+  return new Promise<void>((resolve) => {
+    // Resolve when response is finished (sent to client)
+    res.on('finish', () => resolve());
+    res.on('close', () => resolve());
+    
+    // Call Express app - it will handle the request/response
+    app(req, res);
+  });
 };
