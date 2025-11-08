@@ -63,6 +63,11 @@ export class SupabaseStorageService {
 
       const filePath = pathMatch[1];
 
+      if (!filePath) {
+        console.error('Could not extract file path from URL:', imageUrl);
+        return false;
+      }
+
       const { error } = await supabaseAdmin.storage
         .from(this.BUCKET_NAME)
         .remove([filePath]);
