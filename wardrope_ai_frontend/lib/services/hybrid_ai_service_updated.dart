@@ -17,14 +17,14 @@ class HybridAIService {
   static Future<Map<String, dynamic>> checkStatus() async {
     final url = baseUrl;
     final fullUrl = '$url/status';
-    
+
     try {
       _logger.i('Checking AI service status at: $fullUrl');
-      
+
       // Parse URI to ensure it's valid
       final uri = Uri.parse(fullUrl);
       _logger.d('Parsed URI - Scheme: ${uri.scheme}, Host: ${uri.host}, Port: ${uri.port}, Path: ${uri.path}');
-      
+
       final response = await http
           .get(uri)
           .timeout(_timeout);
@@ -45,7 +45,7 @@ class HybridAIService {
       _logger.e('HybridAIService Error: $e');
       _logger.e('Full URL attempted: $fullUrl');
       _logger.e('Base URL: $url');
-      
+
       // Provide more detailed error information
       String errorMessage = e.toString();
       if (e.toString().contains('Connection refused') || e.toString().contains('port')) {
@@ -55,7 +55,7 @@ class HybridAIService {
             '• Ensure device has internet connectivity\n'
             '• Verify backend is accessible: https://wardrope-ai-backend.vercel.app/health';
       }
-      
+
       return {
         'success': false,
         'error': errorMessage,
@@ -64,7 +64,7 @@ class HybridAIService {
     }
   }
 
-  /// Process user model photo for outfit fitting
+  /// Process user model photo for outfit fitting (local-only version)
   static Future<Map<String, dynamic>> processUserModel(
     File imageFile, {
     bool enhanceQuality = true,
@@ -75,22 +75,22 @@ class HybridAIService {
   }) async {
     final url = baseUrl;
     final fullUrl = '$url/process-model';
-    
+
     try {
       onStatus?.call('Preparing image...');
       onProgress?.call(0.1);
 
       _logger.i('Processing user model at: $fullUrl');
-      
+
       // Parse URI to ensure it's valid and uses correct port
       final uri = Uri.parse(fullUrl);
       _logger.d('Parsed URI - Scheme: ${uri.scheme}, Host: ${uri.host}, Port: ${uri.port}, Path: ${uri.path}');
-      
+
       // Ensure HTTPS uses port 443 explicitly if not specified
-      final finalUri = uri.scheme == 'https' && uri.port == 0 
+      final finalUri = uri.scheme == 'https' && uri.port == 0
           ? uri.replace(port: 443)
           : uri;
-      
+
       // Create multipart request
       final request = http.MultipartRequest(
         'POST',
@@ -100,7 +100,7 @@ class HybridAIService {
       // Add image file with proper MIME type
       final imageBytes = await imageFile.readAsBytes();
       final filename = imageFile.path.split('/').last;
-      
+
       // Determine MIME type from file extension
       String contentType = 'image/jpeg'; // default
       final extension = filename.toLowerCase().split('.').last;
@@ -113,9 +113,9 @@ class HybridAIService {
       } else if (extension == 'gif') {
         contentType = 'image/gif';
       }
-      
+
       _logger.d('Uploading image: $filename, Content-Type: $contentType, Size: ${imageBytes.length} bytes');
-      
+
       final multipartFile = http.MultipartFile.fromBytes(
         'image',
         imageBytes,
@@ -128,236 +128,113 @@ class HybridAIService {
       request.fields['enhance_quality'] = enhanceQuality.toString();
       request.fields['remove_background'] = removeBackground.toString();
       request.fields['upscale'] = upscale.toString();
+      // Request binary response instead of JSON
+      request.fields['response_format'] = 'binary';
 
       onStatus?.call('Processing image...');
       onProgress?.call(0.3);
 
-      // Send request
+      // Send request and stream response
       final streamedResponse = await request.send().timeout(_timeout);
-      final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
 
-      onStatus?.call('Finalizing...');
-      onProgress?.call(0.9);
+      onStatus?.call('Downloading processed image...');
+      onProgress?.call(0.8);
 
-      _logger.d('Response status: ${response.statusCode}');
-      _logger.d('Response body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
+      _logger.d('Response status: ${streamedResponse.statusCode}');
+      _logger.d('Response content-type: ${streamedResponse.headers['content-type']}');
 
-      if (response.statusCode == 200) {
+      if (streamedResponse.statusCode == 200) {
         try {
-          final data = json.decode(response.body);
-          
-          if (data['success'] == true) {
+          // Check if we received JSON metadata or binary image
+          final contentType = streamedResponse.headers['content-type']?.toLowerCase() ?? '';
+
+          if (contentType.contains('application/json')) {
+            // Handle JSON response (for errors or metadata)
+            final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
+            final data = json.decode(response.body);
+
+            if (data['success'] == true) {
+              onProgress?.call(1.0);
+              onStatus?.call('Complete!');
+              return {
+                'success': true,
+                'data': data['data'],
+                'metadata': data['metadata'],
+              };
+            } else {
+              return {
+                'success': false,
+                'error': data['error'] ?? data['message'] ?? 'AI processing failed',
+              };
+            }
+          } else if (contentType.contains('image/')) {
+            // Handle binary image response
+            final imageBytes = await streamedResponse.stream.toBytes();
+            _logger.d('Received binary image: ${imageBytes.length} bytes');
+
+            if (imageBytes.isEmpty) {
+              return {
+                'success': false,
+                'error': 'Received empty image from server',
+              };
+            }
+
             onProgress?.call(1.0);
             onStatus?.call('Complete!');
+
             return {
               'success': true,
-              'data': data['data'],
-              'metadata': data['metadata'],
+              'data': {
+                'processed_image_bytes': imageBytes,
+                'content_type': contentType,
+              },
+              'metadata': {
+                'processing_method': 'binary_stream',
+                'file_size': imageBytes.length,
+                'processed_at': DateTime.now().toIso8601String(),
+              },
             };
           } else {
-            // Backend returned success: false
+            // Unexpected content type
+            final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
+            _logger.e('Unexpected content-type: $contentType');
+            _logger.e('Response preview: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+
             return {
               'success': false,
-              'error': data['error'] ?? data['message'] ?? 'AI processing failed',
+              'error': 'Server returned unexpected content-type: $contentType',
             };
           }
-        } catch (parseError) {
-          _logger.e('Failed to parse response: $parseError');
+        } catch (e) {
+          _logger.e('Failed to process response: $e');
           return {
             'success': false,
-            'error': 'Failed to parse server response. Status: ${response.statusCode}',
+            'error': 'Failed to process server response: ${e.toString()}',
           };
         }
       } else {
-        // Non-200 status code
-        String errorMessage = 'Processing failed (${response.statusCode})';
+        // Non-200 status code - try to get error details
         try {
+          final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
           final errorData = json.decode(response.body);
-          errorMessage = errorData['error'] ?? 
-                        errorData['message'] ?? 
-                        'Processing failed (${response.statusCode})';
-          
-          // Add details if available
-          if (errorData['details'] != null) {
-            errorMessage += '\n\nDetails: ${errorData['details']}';
-          }
+          return {
+            'success': false,
+            'error': errorData['error'] ??
+                      errorData['message'] ??
+                      'Processing failed (${streamedResponse.statusCode})',
+          };
         } catch (e) {
-          _logger.e('Failed to parse error response: $e');
-          final preview = response.body.length > 200 
-              ? response.body.substring(0, 200) + '...'
-              : response.body;
-          errorMessage = '$errorMessage\n\nResponse: $preview';
+          return {
+            'success': false,
+            'error': 'Processing failed (${streamedResponse.statusCode})',
+          };
         }
-        
-        return {
-          'success': false,
-          'error': errorMessage,
-        };
       }
     } catch (e) {
       _logger.e('HybridAIService Error: $e');
       _logger.e('Full URL attempted: $fullUrl');
       _logger.e('Base URL: $url');
-      
-      // Provide more detailed error information
-      String errorMessage = e.toString();
-      if (e.toString().contains('Connection refused') || e.toString().contains('port')) {
-        errorMessage += '\n\n⚠️ Network Issue Detected:\n'
-            'The device appears to be using a proxy/VPN that is interfering with HTTPS connections.\n\n'
-            '🔧 Troubleshooting Steps:\n'
-            '1. Disable any VPN or proxy apps on your device\n'
-            '2. Check Settings → Network → Private DNS (set to "Automatic" or "Off")\n'
-            '3. Try connecting to a different Wi-Fi network\n'
-            '4. Restart your device\n'
-            '5. Test the backend URL in Chrome: https://wardrope-ai-backend.vercel.app/health\n\n'
-            'The random port numbers (50396, 37474) indicate a proxy is intercepting HTTPS traffic.';
-      }
-      
-      return {
-        'success': false,
-        'error': errorMessage,
-        'url': fullUrl,
-      };
-    }
-  }
 
-  /// Process clothing item for catalog management
-  static Future<Map<String, dynamic>> processClothingItem(
-    File imageFile, {
-    bool removeBackground = true,
-    bool enhanceQuality = true,
-    bool categorize = true,
-    bool extractColors = true,
-    Function(double)? onProgress,
-    Function(String)? onStatus,
-  }) async {
-    final url = baseUrl;
-    final fullUrl = '$url/process-clothing';
-    
-    try {
-      onStatus?.call('Preparing image...');
-      onProgress?.call(0.1);
-
-      _logger.i('Processing clothing item at: $fullUrl');
-      
-      // Parse URI to ensure it's valid and uses correct port
-      final uri = Uri.parse(fullUrl);
-      _logger.d('Parsed URI - Scheme: ${uri.scheme}, Host: ${uri.host}, Port: ${uri.port}, Path: ${uri.path}');
-      
-      // Ensure HTTPS uses port 443 explicitly if not specified
-      final finalUri = uri.scheme == 'https' && uri.port == 0 
-          ? uri.replace(port: 443)
-          : uri;
-      
-      // Create multipart request
-      final request = http.MultipartRequest(
-        'POST',
-        finalUri,
-      );
-
-      // Add image file with proper MIME type
-      final imageBytes = await imageFile.readAsBytes();
-      final filename = imageFile.path.split('/').last;
-      
-      // Determine MIME type from file extension
-      String contentType = 'image/jpeg'; // default
-      final extension = filename.toLowerCase().split('.').last;
-      if (extension == 'png') {
-        contentType = 'image/png';
-      } else if (extension == 'jpg' || extension == 'jpeg') {
-        contentType = 'image/jpeg';
-      } else if (extension == 'webp') {
-        contentType = 'image/webp';
-      } else if (extension == 'gif') {
-        contentType = 'image/gif';
-      }
-      
-      _logger.d('Uploading image: $filename, Content-Type: $contentType, Size: ${imageBytes.length} bytes');
-      
-      final multipartFile = http.MultipartFile.fromBytes(
-        'image',
-        imageBytes,
-        filename: filename,
-        contentType: MediaType.parse(contentType),
-      );
-      request.files.add(multipartFile);
-
-      // Add processing options
-      request.fields['remove_background'] = removeBackground.toString();
-      request.fields['enhance_quality'] = enhanceQuality.toString();
-      request.fields['categorize'] = categorize.toString();
-      request.fields['extract_colors'] = extractColors.toString();
-
-      onStatus?.call('Processing image...');
-      onProgress?.call(0.3);
-
-      // Send request
-      final streamedResponse = await request.send().timeout(_timeout);
-      final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
-
-      onStatus?.call('Finalizing...');
-      onProgress?.call(0.9);
-
-      _logger.d('Response status: ${response.statusCode}');
-      _logger.d('Response body: ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
-
-      if (response.statusCode == 200) {
-        try {
-          final data = json.decode(response.body);
-          
-          if (data['success'] == true) {
-            onProgress?.call(1.0);
-            onStatus?.call('Complete!');
-            return {
-              'success': true,
-              'data': data['data'],
-              'metadata': data['metadata'],
-            };
-          } else {
-            // Backend returned success: false
-            return {
-              'success': false,
-              'error': data['error'] ?? data['message'] ?? 'AI processing failed',
-            };
-          }
-        } catch (parseError) {
-          _logger.e('Failed to parse response: $parseError');
-          return {
-            'success': false,
-            'error': 'Failed to parse server response. Status: ${response.statusCode}',
-          };
-        }
-      } else {
-        // Non-200 status code
-        String errorMessage = 'Processing failed (${response.statusCode})';
-        try {
-          final errorData = json.decode(response.body);
-          errorMessage = errorData['error'] ?? 
-                        errorData['message'] ?? 
-                        'Processing failed (${response.statusCode})';
-          
-          // Add details if available
-          if (errorData['details'] != null) {
-            errorMessage += '\n\nDetails: ${errorData['details']}';
-          }
-        } catch (e) {
-          _logger.e('Failed to parse error response: $e');
-          final preview = response.body.length > 200 
-              ? response.body.substring(0, 200) + '...'
-              : response.body;
-          errorMessage = '$errorMessage\n\nResponse: $preview';
-        }
-        
-        return {
-          'success': false,
-          'error': errorMessage,
-        };
-      }
-    } catch (e) {
-      _logger.e('HybridAIService Error: $e');
-      _logger.e('Full URL attempted: $fullUrl');
-      _logger.e('Base URL: $url');
-      
       // Provide more detailed error information
       String errorMessage = e.toString();
       if (e.toString().contains('Connection refused') || e.toString().contains('port')) {
@@ -371,7 +248,7 @@ class HybridAIService {
             '5. Test the backend URL in Chrome: https://wardrope-ai-backend.vercel.app/health\n\n'
             'The random port numbers indicate a proxy is intercepting HTTPS traffic.';
       }
-      
+
       return {
         'success': false,
         'error': errorMessage,
@@ -380,7 +257,202 @@ class HybridAIService {
     }
   }
 
-  /// Generate outfit visualization
+  /// Process clothing item for catalog management (local-only version)
+  static Future<Map<String, dynamic>> processClothingItem(
+    File imageFile, {
+    bool removeBackground = true,
+    bool enhanceQuality = true,
+    bool categorize = true,
+    bool extractColors = true,
+    Function(double)? onProgress,
+    Function(String)? onStatus,
+  }) async {
+    final url = baseUrl;
+    final fullUrl = '$url/process-clothing';
+
+    try {
+      onStatus?.call('Preparing image...');
+      onProgress?.call(0.1);
+
+      _logger.i('Processing clothing item at: $fullUrl');
+
+      // Parse URI to ensure it's valid and uses correct port
+      final uri = Uri.parse(fullUrl);
+      _logger.d('Parsed URI - Scheme: ${uri.scheme}, Host: ${uri.host}, Port: ${uri.port}, Path: ${uri.path}');
+
+      // Ensure HTTPS uses port 443 explicitly if not specified
+      final finalUri = uri.scheme == 'https' && uri.port == 0
+          ? uri.replace(port: 443)
+          : uri;
+
+      // Create multipart request
+      final request = http.MultipartRequest(
+        'POST',
+        finalUri,
+      );
+
+      // Add image file with proper MIME type
+      final imageBytes = await imageFile.readAsBytes();
+      final filename = imageFile.path.split('/').last;
+
+      // Determine MIME type from file extension
+      String contentType = 'image/jpeg'; // default
+      final extension = filename.toLowerCase().split('.').last;
+      if (extension == 'png') {
+        contentType = 'image/png';
+      } else if (extension == 'jpg' || extension == 'jpeg') {
+        contentType = 'image/jpeg';
+      } else if (extension == 'webp') {
+        contentType = 'image/webp';
+      } else if (extension == 'gif') {
+        contentType = 'image/gif';
+      }
+
+      _logger.d('Uploading image: $filename, Content-Type: $contentType, Size: ${imageBytes.length} bytes');
+
+      final multipartFile = http.MultipartFile.fromBytes(
+        'image',
+        imageBytes,
+        filename: filename,
+        contentType: MediaType.parse(contentType),
+      );
+      request.files.add(multipartFile);
+
+      // Add processing options
+      request.fields['remove_background'] = removeBackground.toString();
+      request.fields['enhance_quality'] = enhanceQuality.toString();
+      request.fields['categorize'] = categorize.toString();
+      request.fields['extract_colors'] = extractColors.toString();
+      // Request binary response for processed image
+      request.fields['response_format'] = 'binary';
+
+      onStatus?.call('Processing image...');
+      onProgress?.call(0.3);
+
+      // Send request and stream response
+      final streamedResponse = await request.send().timeout(_timeout);
+
+      onStatus?.call('Downloading processed image...');
+      onProgress?.call(0.8);
+
+      _logger.d('Response status: ${streamedResponse.statusCode}');
+      _logger.d('Response content-type: ${streamedResponse.headers['content-type']}');
+
+      if (streamedResponse.statusCode == 200) {
+        try {
+          // Check if we received JSON metadata or binary image
+          final contentType = streamedResponse.headers['content-type']?.toLowerCase() ?? '';
+
+          if (contentType.contains('application/json')) {
+            // Handle JSON response (for errors or metadata without image)
+            final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
+            final data = json.decode(response.body);
+
+            if (data['success'] == true) {
+              onProgress?.call(1.0);
+              onStatus?.call('Complete!');
+              return {
+                'success': true,
+                'data': data['data'],
+                'metadata': data['metadata'],
+              };
+            } else {
+              return {
+                'success': false,
+                'error': data['error'] ?? data['message'] ?? 'AI processing failed',
+              };
+            }
+          } else if (contentType.contains('image/')) {
+            // Handle binary image response
+            final imageBytes = await streamedResponse.stream.toBytes();
+            _logger.d('Received binary image: ${imageBytes.length} bytes');
+
+            if (imageBytes.isEmpty) {
+              return {
+                'success': false,
+                'error': 'Received empty image from server',
+              };
+            }
+
+            onProgress?.call(1.0);
+            onStatus?.call('Complete!');
+
+            return {
+              'success': true,
+              'data': {
+                'processed_image_bytes': imageBytes,
+                'content_type': contentType,
+              },
+              'metadata': {
+                'processing_method': 'binary_stream',
+                'file_size': imageBytes.length,
+                'processed_at': DateTime.now().toIso8601String(),
+              },
+            };
+          } else {
+            // Unexpected content type
+            final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
+            _logger.e('Unexpected content-type: $contentType');
+            _logger.e('Response preview: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+
+            return {
+              'success': false,
+              'error': 'Server returned unexpected content-type: $contentType',
+            };
+          }
+        } catch (e) {
+          _logger.e('Failed to process response: $e');
+          return {
+            'success': false,
+            'error': 'Failed to process server response: ${e.toString()}',
+          };
+        }
+      } else {
+        // Non-200 status code - try to get error details
+        try {
+          final response = await http.Response.fromStream(streamedResponse).timeout(_timeout);
+          final errorData = json.decode(response.body);
+          return {
+            'success': false,
+            'error': errorData['error'] ??
+                      errorData['message'] ??
+                      'Processing failed (${streamedResponse.statusCode})',
+          };
+        } catch (e) {
+          return {
+            'success': false,
+            'error': 'Processing failed (${streamedResponse.statusCode})',
+          };
+        }
+      }
+    } catch (e) {
+      _logger.e('HybridAIService Error: $e');
+      _logger.e('Full URL attempted: $fullUrl');
+      _logger.e('Base URL: $url');
+
+      // Provide more detailed error information
+      String errorMessage = e.toString();
+      if (e.toString().contains('Connection refused') || e.toString().contains('port')) {
+        errorMessage += '\n\n⚠️ Network Issue Detected:\n'
+            'The device appears to be using a proxy/VPN that is interfering with HTTPS connections.\n\n'
+            '🔧 Troubleshooting Steps:\n'
+            '1. Disable any VPN or proxy apps on your device\n'
+            '2. Check Settings → Network → Private DNS (set to "Automatic" or "Off")\n'
+            '3. Try connecting to a different Wi-Fi network\n'
+            '4. Restart your device\n'
+            '5. Test the backend URL in Chrome: https://wardrope-ai-backend.vercel.app/health\n\n'
+            'The random port numbers indicate a proxy is intercepting HTTPS traffic.';
+      }
+
+      return {
+        'success': false,
+        'error': errorMessage,
+        'url': fullUrl,
+      };
+    }
+  }
+
+  /// Generate outfit visualization (keep as JSON for now)
   static Future<Map<String, dynamic>> generateOutfitVisualization(
     File modelImage,
     List<File> clothingItems, {

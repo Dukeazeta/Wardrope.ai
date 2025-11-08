@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'dart:io';
-import '../bloc/model/model_bloc.dart';
+import '../bloc/model/model_bloc_updated.dart';
+import '../bloc/model/model_state_updated.dart';
+import '../bloc/model/model_event_updated.dart';
 import '../theme/app_theme.dart';
 import '../utils/theme_aware_image.dart';
 
@@ -219,25 +224,50 @@ class _ModelScreenState extends State<ModelScreen> {
 
     // Show outfit on model if available
     if (state.hasOutfit && state.currentOutfitImage != null) {
-      return _buildImageDisplay(state.currentOutfitImage!);
+      return _buildImageDisplay(state.currentOutfitImage!, state.currentModel);
     }
 
     // Show processed model if available
-    if (state.hasModel && state.currentModel?.processedImageUrl != null) {
-      return _buildImageDisplay(state.currentModel!.processedImageUrl!);
+    if (state.hasModel && state.currentModel != null) {
+      final imageUrl = state.currentModel!.processedImageUrl ?? state.currentModel!.originalImageUrl;
+      if (imageUrl.isNotEmpty) {
+        // Debug: Model image loading
+        debugPrint('Loading model image from: $imageUrl');
+        debugPrint('Processed URL: ${state.currentModel!.processedImageUrl}');
+        debugPrint('Original URL: ${state.currentModel!.originalImageUrl}');
+        return _buildImageDisplay(imageUrl, state.currentModel);
+      } else {
+        debugPrint('Model image URL is empty');
+      }
     }
 
     // Show placeholder if no model
     return _buildPlaceholderDisplay();
   }
 
-  Widget _buildImageDisplay(String imageUrl) {
-    // Check if it's a data URL (base64) or file path
+  Widget _buildImageDisplay(String imageUrl, [ModelData? modelData]) {
+    // Check if it's a data URL (base64)
     if (imageUrl.startsWith('data:')) {
       return _buildBase64Image(imageUrl);
-    } else if (imageUrl.startsWith('/')) {
-      return _buildFileImage(imageUrl);
-    } else {
+    }
+    // Check if it's a local file path (starts with / or contains common path patterns)
+    else if (imageUrl.startsWith('/') ||
+             imageUrl.contains('/data/') ||
+             imageUrl.contains('/storage/') ||
+             imageUrl.contains('/cache/') ||
+             !imageUrl.contains('://')) {
+      return _buildFileImage(imageUrl, modelData);
+    }
+    // Check if it's an Imgur URL (legacy) - try to handle it locally first
+    else if (imageUrl.contains('imgur.com')) {
+      return _buildImgurImage(imageUrl, modelData);
+    }
+    // Check if it's a network URL (http/https)
+    else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return _buildNetworkImage(imageUrl);
+    }
+    // Otherwise treat as asset
+    else {
       return _buildAssetImage(imageUrl);
     }
   }
@@ -259,13 +289,116 @@ class _ModelScreenState extends State<ModelScreen> {
     }
   }
 
-  Widget _buildFileImage(String filePath) {
+  Widget _buildFileImage(String filePath, [ModelData? modelData]) {
+    final file = File(filePath);
+    
+    // Check if file exists before trying to load
+    if (!file.existsSync()) {
+      debugPrint('File does not exist: $filePath');
+      // Try to show original image if processed image doesn't exist
+      if (modelData != null && 
+          modelData.originalImageUrl != filePath &&
+          modelData.originalImageUrl.isNotEmpty) {
+        final originalFile = File(modelData.originalImageUrl);
+        if (originalFile.existsSync()) {
+          debugPrint('Falling back to original image: ${modelData.originalImageUrl}');
+          return Image.file(
+            originalFile,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildErrorDisplay('Failed to load image');
+            },
+          );
+        }
+      }
+      return _buildErrorDisplay('Image file not found');
+    }
+    
     return Image.file(
-      File(filePath),
+      file,
       fit: BoxFit.contain,
       alignment: Alignment.center,
       errorBuilder: (context, error, stackTrace) {
-        return _buildErrorDisplay('Failed to load model image');
+        debugPrint('Error loading file image: $error');
+        debugPrint('File path: $filePath');
+        debugPrint('File exists: ${file.existsSync()}');
+        // Try original image as fallback
+        if (modelData != null && 
+            modelData.originalImageUrl != filePath &&
+            modelData.originalImageUrl.isNotEmpty) {
+          final originalFile = File(modelData.originalImageUrl);
+          if (originalFile.existsSync()) {
+            return Image.file(
+              originalFile,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+            );
+          }
+        }
+        return _buildErrorDisplay('Failed to load image from file');
+      },
+    );
+  }
+
+  Widget _buildImgurImage(String imageUrl, [ModelData? modelData]) {
+    return FutureBuilder<File>(
+      future: _downloadAndCacheImgurImage(imageUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Downloading image...'),
+              ],
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.existsSync()) {
+          debugPrint('Failed to download Imgur image: ${snapshot.error}');
+          debugPrint('Imgur URL: $imageUrl');
+
+          // Fallback: try network image if local download fails
+          return _buildNetworkImage(imageUrl);
+        }
+
+        // Load the locally cached image
+        return Image.file(
+          snapshot.data!,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          errorBuilder: (context, error, stackTrace) {
+            debugPrint('Error loading cached Imgur image: $error');
+            return _buildErrorDisplay('Failed to load image');
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNetworkImage(String imageUrl) {
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            value: loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('Error loading network image: $error');
+        debugPrint('Image URL: $imageUrl');
+        return _buildErrorDisplay('Failed to load image from network');
       },
     );
   }
@@ -476,5 +609,42 @@ class _ModelScreenState extends State<ModelScreen> {
     final RegExp regExp = RegExp(r'data:image/[^;]+;base64,(.+)');
     final match = regExp.firstMatch(dataUrl);
     return match?.group(1) ?? '';
+  }
+
+  /// Download and cache Imgur images locally
+  Future<File> _downloadAndCacheImgurImage(String imageUrl) async {
+    try {
+      // Create a cache directory for Imgur images
+      final Directory appDir = await getApplicationDocumentsDirectory();
+      final Directory cacheDir = Directory(path.join(appDir.path, 'imgur_cache'));
+      if (!await cacheDir.exists()) {
+        await cacheDir.create(recursive: true);
+      }
+
+      // Generate a filename based on the URL hash
+      final String filename = 'imgur_${imageUrl.hashCode.toString()}.jpg';
+      final File cachedFile = File(path.join(cacheDir.path, filename));
+
+      // Check if we already have this image cached
+      if (await cachedFile.exists()) {
+        debugPrint('Using cached Imgur image: ${cachedFile.path}');
+        return cachedFile;
+      }
+
+      // Download the image
+      debugPrint('Downloading Imgur image: $imageUrl');
+      final response = await http.get(Uri.parse(imageUrl));
+
+      if (response.statusCode == 200) {
+        await cachedFile.writeAsBytes(response.bodyBytes);
+        debugPrint('Cached Imgur image locally: ${cachedFile.path}');
+        return cachedFile;
+      } else {
+        throw Exception('Failed to download Imgur image: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error downloading Imgur image: $e');
+      rethrow;
+    }
   }
 }

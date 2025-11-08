@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { hybridAIService } from '../libs/geminiAI';
+import { SupabaseStorageService } from '../libs/supabaseStorage';
 import path from 'path';
 import fs from 'fs';
 
@@ -61,14 +62,61 @@ export class SimplifiedAIController {
       // Handle both memory storage (Vercel) and disk storage (local)
       // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
       const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
-      
+
       console.log('Processing model with options:', options);
       console.log('Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
       console.log('Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
-      
+
       const result = await aiService.processUserModel(imageInput, options);
 
       if (result.success) {
+        // Handle AI service result - check if it has a URL or buffer
+        if (result.data?.processed_image_url) {
+          // AI returned a URL - download it and upload to Supabase
+          try {
+            console.log('AI returned URL, downloading and uploading to Supabase...');
+            const response = await fetch(result.data.processed_image_url);
+
+            if (response.ok) {
+              const imageBuffer = Buffer.from(await response.arrayBuffer());
+              const supabaseUrl = await SupabaseStorageService.uploadProcessedImage(
+                imageBuffer,
+                req.body.user_id || 'anonymous_user',
+                'model',
+                req.file.originalname
+              );
+
+              // Replace the broken URL with Supabase URL
+              result.data.processed_image_url = supabaseUrl;
+              console.log('✅ Model image downloaded and uploaded to Supabase:', supabaseUrl);
+            } else {
+              console.warn(`Failed to download AI image (${response.status}), keeping original URL`);
+            }
+          } catch (supabaseError) {
+            console.error('Failed to download/upload AI image to Supabase:', supabaseError);
+            // Fall back to original URL but it might be broken
+          }
+        } else if (result.data?.processed_image_buffer) {
+          // AI returned a buffer - upload it directly to Supabase
+          try {
+            console.log('Uploading processed model image buffer to Supabase Storage...');
+            const supabaseUrl = await SupabaseStorageService.uploadProcessedImage(
+              Buffer.from(result.data.processed_image_buffer),
+              req.body.user_id || 'anonymous_user',
+              'model',
+              req.file.originalname
+            );
+
+            // Replace with Supabase URL
+            result.data.processed_image_url = supabaseUrl;
+            delete result.data.processed_image_buffer; // Remove buffer from response
+
+            console.log('✅ Model image uploaded to Supabase:', supabaseUrl);
+          } catch (supabaseError) {
+            console.error('Failed to upload to Supabase, returning original result:', supabaseError);
+          }
+        }
+
         res.json({
           success: true,
           message: 'Model processed successfully',
@@ -116,14 +164,61 @@ export class SimplifiedAIController {
       // Handle both memory storage (Vercel) and disk storage (local)
       // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
       const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
-      
+
       console.log('Processing clothing item with options:', options);
       console.log('Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
       console.log('Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
-      
+
       const result = await aiService.processClothingItem(imageInput, options);
 
       if (result.success) {
+        // Handle AI service result - check if it has a URL or buffer
+        if (result.data?.processed_image_url) {
+          // AI returned a URL - download it and upload to Supabase
+          try {
+            console.log('AI returned URL, downloading and uploading to Supabase...');
+            const response = await fetch(result.data.processed_image_url);
+
+            if (response.ok) {
+              const imageBuffer = Buffer.from(await response.arrayBuffer());
+              const supabaseUrl = await SupabaseStorageService.uploadProcessedImage(
+                imageBuffer,
+                req.body.user_id || 'anonymous_user',
+                'clothing',
+                req.file.originalname
+              );
+
+              // Replace the broken URL with Supabase URL
+              result.data.processed_image_url = supabaseUrl;
+              console.log('✅ Clothing image downloaded and uploaded to Supabase:', supabaseUrl);
+            } else {
+              console.warn(`Failed to download AI image (${response.status}), keeping original URL`);
+            }
+          } catch (supabaseError) {
+            console.error('Failed to download/upload AI image to Supabase:', supabaseError);
+            // Fall back to original URL but it might be broken
+          }
+        } else if (result.data?.processed_image_buffer) {
+          // AI returned a buffer - upload it directly to Supabase
+          try {
+            console.log('Uploading processed clothing image buffer to Supabase Storage...');
+            const supabaseUrl = await SupabaseStorageService.uploadProcessedImage(
+              Buffer.from(result.data.processed_image_buffer),
+              req.body.user_id || 'anonymous_user',
+              'clothing',
+              req.file.originalname
+            );
+
+            // Replace with Supabase URL
+            result.data.processed_image_url = supabaseUrl;
+            delete result.data.processed_image_buffer; // Remove buffer from response
+
+            console.log('✅ Clothing image uploaded to Supabase:', supabaseUrl);
+          } catch (supabaseError) {
+            console.error('Failed to upload to Supabase, returning original result:', supabaseError);
+          }
+        }
+
         res.json({
           success: true,
           message: 'Clothing item processed successfully',

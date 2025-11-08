@@ -1,15 +1,15 @@
 import 'dart:io';
 import 'package:bloc/bloc.dart';
-import 'package:equatable/equatable.dart';
+import 'package:logger/logger.dart';
 import '../../services/local_storage_service.dart';
-import '../../services/image_processing_service.dart';
-import '../../services/hybrid_ai_service.dart';
-
-part 'model_event.dart';
-part 'model_state.dart';
+import '../../services/image_processing_service_updated.dart';
+import '../../services/hybrid_ai_service_updated.dart';
+import 'model_event_updated.dart';
+import 'model_state_updated.dart';
 
 class ModelBloc extends Bloc<ModelEvent, ModelState> {
   String? _currentUserId;
+  static final Logger _logger = Logger();
 
   ModelBloc() : super(const ModelState()) {
     on<ModelLoadRequested>(_onModelLoadRequested);
@@ -29,6 +29,10 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     Emitter<ModelState> emit,
   ) async {
     _currentUserId = event.userId;
+
+    // Set user ID for image processing
+    ImageProcessingService.setCurrentUserId(event.userId);
+
     emit(state.copyWith(
       status: ModelStatus.loading,
       clearErrorMessage: true,
@@ -40,7 +44,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
 
       if (result['success']) {
         final models = result['data'];
-        
+
         // Ensure models is a List and convert to List<ModelData>
         List<ModelData> userModels;
         if (models is List) {
@@ -80,16 +84,18 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ));
 
     try {
-      // Process model with hybrid service
+      // Process model with updated local-only service
       final result = await ImageProcessingService.processModelComplete(
         imageFile: event.imageFile,
         name: event.modelType == 'user' ? 'User Model' : 'Generated Model',
         modelType: event.modelType,
         onProgress: (progress) {
           // You could emit progress state here if needed
+          _logger.d('Model processing progress: ${(progress * 100).toInt()}%');
         },
         onStatus: (status) {
           // You could emit status updates here if needed
+          _logger.d('Model processing status: $status');
         },
       );
 
@@ -105,6 +111,8 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
           currentModel: newModel,
           currentOutfitImage: null, // Clear any existing outfit
         ));
+
+        _logger.i('✅ Model processed and saved locally: ${newModel.processedImageUrl}');
       } else {
         emit(state.copyWith(
           status: ModelStatus.error,
@@ -208,7 +216,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ));
 
     try {
-      // Create outfit using hybrid service
+      // Create outfit using updated service
       final result = await ImageProcessingService.createOutfitWithVisualization(
         name: 'Quick Outfit',
         occasion: 'Casual',
@@ -218,9 +226,11 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
         description: 'Outfit created with model fitting',
         onProgress: (progress) {
           // Progress updates could be handled here
+          _logger.d('Outfit creation progress: ${(progress * 100).toInt()}%');
         },
         onStatus: (status) {
           // Status updates could be handled here
+          _logger.d('Outfit creation status: $status');
         },
       );
 
@@ -235,8 +245,11 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
             'processed': true,
             'outfit_id': outfitData['id'],
             'created_at': DateTime.now().toIso8601String(),
+            'local_only': true,
           },
         ));
+
+        _logger.i('✅ Outfit created locally');
       } else {
         emit(state.copyWith(
           isProcessingOutfit: false,
@@ -306,106 +319,4 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
   // Helper method to get processed models only
   List<ModelData> get processedModels =>
       state.userModels.where((model) => model.isProcessed).toList();
-}
-
-// Model data class for better type safety
-class ModelData {
-  final String id;
-  final String? userId;
-  final String originalImageUrl;
-  final String? processedImageUrl;
-  final String modelType;
-  final String status;
-  final Map<String, dynamic>? metadata;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  ModelData({
-    required this.id,
-    this.userId,
-    required this.originalImageUrl,
-    this.processedImageUrl,
-    required this.modelType,
-    required this.status,
-    this.metadata,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory ModelData.fromJson(Map<String, dynamic> json) {
-    // Handle both snake_case (backend) and camelCase (frontend) field names
-    final id = json['id']?.toString() ?? '';
-    final userId = json['userId'] ?? json['user_id'];
-    final originalImageUrl = json['originalImageUrl'] ?? json['original_image_url'] ?? '';
-    final processedImageUrl = json['processedImageUrl'] ?? json['processed_image_url'];
-    final modelType = json['modelType'] ?? json['model_type'] ?? 'user';
-    final status = json['status'] ?? json['processing_status'] ?? 'pending';
-    final metadata = json['metadata'] as Map<String, dynamic>?;
-    
-    // Parse dates - handle both ISO strings and DateTime objects
-    DateTime createdAt;
-    DateTime updatedAt;
-    
-    try {
-      if (json['createdAt'] is String) {
-        createdAt = DateTime.parse(json['createdAt']);
-      } else if (json['created_at'] is String) {
-        createdAt = DateTime.parse(json['created_at']);
-      } else if (json['createdAt'] is DateTime) {
-        createdAt = json['createdAt'] as DateTime;
-      } else if (json['created_at'] is DateTime) {
-        createdAt = json['created_at'] as DateTime;
-      } else {
-        createdAt = DateTime.now();
-      }
-    } catch (e) {
-      createdAt = DateTime.now();
-    }
-    
-    try {
-      if (json['updatedAt'] is String) {
-        updatedAt = DateTime.parse(json['updatedAt']);
-      } else if (json['updated_at'] is String) {
-        updatedAt = DateTime.parse(json['updated_at']);
-      } else if (json['updatedAt'] is DateTime) {
-        updatedAt = json['updatedAt'] as DateTime;
-      } else if (json['updated_at'] is DateTime) {
-        updatedAt = json['updated_at'] as DateTime;
-      } else {
-        updatedAt = DateTime.now();
-      }
-    } catch (e) {
-      updatedAt = DateTime.now();
-    }
-    
-    return ModelData(
-      id: id,
-      userId: userId?.toString(),
-      originalImageUrl: originalImageUrl,
-      processedImageUrl: processedImageUrl?.toString(),
-      modelType: modelType,
-      status: status,
-      metadata: metadata,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'originalImageUrl': originalImageUrl,
-      'processedImageUrl': processedImageUrl,
-      'modelType': modelType,
-      'status': status,
-      'metadata': metadata,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-    };
-  }
-
-  bool get isProcessed => status == 'completed' && processedImageUrl != null;
-  bool get isProcessing => status == 'processing';
-  bool get hasFailed => status == 'failed';
 }

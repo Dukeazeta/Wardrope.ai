@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import routes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { hybridSQLiteService } from './libs/sqlite';
+import { SupabaseStorageService } from './libs/supabaseStorage';
 
 // Load environment variables
 dotenv.config();
@@ -88,6 +89,15 @@ async function startServer() {
     await hybridSQLiteService.initialize();
     console.log('✅ Hybrid SQLite database initialized');
 
+    // Initialize Supabase Storage
+    try {
+      await SupabaseStorageService.ensureBucketExists();
+      console.log('✅ Supabase Storage initialized');
+    } catch (supabaseError) {
+      console.warn('⚠️  Supabase Storage initialization failed:', supabaseError.message);
+      console.log('⚠️  Continuing without Supabase Storage - images may not work');
+    }
+
     // Start server
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server is running on port ${PORT}`);
@@ -97,12 +107,19 @@ async function startServer() {
       console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🤖 Hybrid Architecture: ENABLED`);
       console.log(`💾 Local Storage: SQLite`);
+      console.log(`🗄️  Cloud Storage: Supabase`);
       console.log(`🧠 AI Service: Google Gemini`);
 
       if (process.env.GEMINI_API_KEY) {
         console.log(`✅ AI Service: Configured`);
       } else {
         console.log(`⚠️  AI Service: GEMINI_API_KEY not configured`);
+      }
+
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        console.log(`✅ Supabase Storage: Configured`);
+      } else {
+        console.log(`⚠️  Supabase Storage: Missing SUPABASE_URL or SUPABASE_ANON_KEY`);
       }
     });
   } catch (error) {
