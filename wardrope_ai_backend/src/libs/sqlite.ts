@@ -66,13 +66,22 @@ class HybridSQLiteService {
   private dbPath: string;
 
   constructor() {
-    // Create database directory if it doesn't exist
-    const dbDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
+    // Determine database path based on environment
+    // In Vercel/serverless, use /tmp (only writable directory)
+    // In local development, use ./data directory
+    const isVercel = process.env.VERCEL === '1' || 
+                     process.env.VERCEL_ENV !== undefined ||
+                     process.cwd().startsWith('/var/task');
+    
+    if (isVercel) {
+      // Use /tmp for Vercel serverless (only writable directory)
+      this.dbPath = '/tmp/wardrobe_hybrid.db';
+      console.log('Using Vercel serverless mode: database will be stored in /tmp');
+    } else {
+      // Use local data directory for development
+      this.dbPath = path.join(process.cwd(), 'data', 'wardrobe_hybrid.db');
+      console.log(`Using local development mode: database will be stored at ${this.dbPath}`);
     }
-
-    this.dbPath = path.join(dbDir, 'wardrobe_hybrid.db');
   }
 
   /**
@@ -80,13 +89,28 @@ class HybridSQLiteService {
    */
   async initialize(): Promise<void> {
     try {
+      // Ensure directory exists for local development (not needed for /tmp in Vercel)
+      const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+      if (!isVercel) {
+        const dbDir = path.dirname(this.dbPath);
+        if (!fs.existsSync(dbDir)) {
+          try {
+            fs.mkdirSync(dbDir, { recursive: true });
+          } catch (dirError: any) {
+            // If directory creation fails, log but continue (might already exist)
+            console.warn(`Warning: Could not create directory ${dbDir}:`, dirError.message);
+          }
+        }
+      }
+
+      // Open database connection
       this.db = await open({
         filename: this.dbPath,
         driver: sqlite3.Database
       });
 
       await this.createTables();
-      console.log('SQLite database initialized successfully');
+      console.log(`SQLite database initialized successfully at: ${this.dbPath}`);
     } catch (error) {
       console.error('Failed to initialize SQLite database:', error);
       throw error;
