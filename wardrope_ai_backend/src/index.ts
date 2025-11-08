@@ -93,8 +93,8 @@ async function startServer() {
     try {
       await SupabaseStorageService.ensureBucketExists();
       console.log('✅ Supabase Storage initialized');
-    } catch (supabaseError) {
-      console.warn('⚠️  Supabase Storage initialization failed:', supabaseError.message);
+    } catch (supabaseError: any) {
+      console.warn('⚠️  Supabase Storage initialization failed:', supabaseError?.message || supabaseError);
       console.log('⚠️  Continuing without Supabase Storage - images may not work');
     }
 

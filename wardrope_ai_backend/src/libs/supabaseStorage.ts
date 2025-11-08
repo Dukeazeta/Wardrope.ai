@@ -31,7 +31,7 @@ export class SupabaseStorageService {
 
       if (error) {
         console.error('Error uploading to Supabase:', error);
-        throw new Error(`Failed to upload to Supabase: ${error.message}`);
+        throw new Error(`Failed to upload to Supabase: ${(error as any).message}`);
       }
 
       // Get public URL
@@ -140,10 +140,10 @@ export class SupabaseStorageService {
         success: true,
         message: `Storage connected successfully. Found ${data.length} buckets.`
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
-        message: `Storage test failed: ${error.message}`
+        message: `Storage test failed: ${error?.message || error}`
       };
     }
   }
