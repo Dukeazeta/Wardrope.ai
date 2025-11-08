@@ -61,6 +61,11 @@ export class SimplifiedAIController {
       // Handle both memory storage (Vercel) and disk storage (local)
       // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
       const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
+      
+      console.log('Processing model with options:', options);
+      console.log('Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
+      console.log('Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
+      
       const result = await aiService.processUserModel(imageInput, options);
 
       if (result.success) {
@@ -111,6 +116,11 @@ export class SimplifiedAIController {
       // Handle both memory storage (Vercel) and disk storage (local)
       // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
       const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
+      
+      console.log('Processing clothing item with options:', options);
+      console.log('Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
+      console.log('Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
+      
       const result = await aiService.processClothingItem(imageInput, options);
 
       if (result.success) {

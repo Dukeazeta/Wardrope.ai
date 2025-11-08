@@ -7,6 +7,7 @@ export interface AIProcessResult {
   data?: any;
   error?: string;
   metadata?: any;
+  details?: string;
 }
 
 export interface ProcessModelOptions {
@@ -36,11 +37,20 @@ class HybridAIService {
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
+      console.error('❌ GEMINI_API_KEY environment variable is missing');
       throw new Error('GEMINI_API_KEY environment variable is required');
     }
 
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
+    try {
+      this.genAI = new GoogleGenerativeAI(apiKey);
+      // Use gemini-2.5-flash for image understanding/processing
+      // For image generation, use gemini-2.5-flash-image, but for understanding use gemini-2.5-flash
+      this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      console.log('✅ Gemini AI service initialized with model: gemini-2.5-flash');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize Gemini AI:', error);
+      throw new Error(`Failed to initialize Gemini AI: ${error.message}`);
+    }
   }
 
   /**
@@ -135,9 +145,27 @@ class HybridAIService {
 
     } catch (error: any) {
       console.error('Error processing user model:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+        stack: error.stack
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = error.message || 'Failed to process user model';
+      if (error.message?.includes('API key')) {
+        errorMessage = 'Invalid or missing Gemini API key. Please check GEMINI_API_KEY environment variable.';
+      } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        errorMessage = 'API quota exceeded or rate limit reached. Please try again later.';
+      } else if (error.message?.includes('model')) {
+        errorMessage = 'Invalid model name or model not available.';
+      }
+      
       return {
         success: false,
-        error: error.message || 'Failed to process user model'
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       };
     }
   }
@@ -235,9 +263,27 @@ class HybridAIService {
 
     } catch (error: any) {
       console.error('Error processing clothing item:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+        stack: error.stack
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = error.message || 'Failed to process clothing item';
+      if (error.message?.includes('API key')) {
+        errorMessage = 'Invalid or missing Gemini API key. Please check GEMINI_API_KEY environment variable.';
+      } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        errorMessage = 'API quota exceeded or rate limit reached. Please try again later.';
+      } else if (error.message?.includes('model')) {
+        errorMessage = 'Invalid model name or model not available.';
+      }
+      
       return {
         success: false,
-        error: error.message || 'Failed to process clothing item'
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       };
     }
   }
@@ -453,7 +499,7 @@ class HybridAIService {
         success: true,
         data: {
           status: 'available',
-          model: 'gemini-2.5-flash-image',
+          model: 'gemini-2.5-flash',
           testResponse: text,
           configuredAt: new Date().toISOString()
         }

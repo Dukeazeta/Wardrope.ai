@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import '../config/app_config.dart';
@@ -15,13 +14,19 @@ class HybridAIService {
 
   /// Check AI service availability
   static Future<Map<String, dynamic>> checkStatus() async {
+    final url = baseUrl;
+    final fullUrl = '$url/status';
+    
     try {
-      final url = baseUrl;
-      _logger.i('Checking AI service status at: $url');
+      _logger.i('Checking AI service status at: $fullUrl');
+      
+      // Parse URI to ensure it's valid
+      final uri = Uri.parse(fullUrl);
+      _logger.d('Parsed URI - Scheme: ${uri.scheme}, Host: ${uri.host}, Port: ${uri.port}, Path: ${uri.path}');
+      
       final response = await http
-          .get(
-            Uri.parse('$url/status'),
-          ).timeout(_timeout);
+          .get(uri)
+          .timeout(_timeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -37,9 +42,23 @@ class HybridAIService {
       }
     } catch (e) {
       _logger.e('HybridAIService Error: $e');
+      _logger.e('Full URL attempted: $fullUrl');
+      _logger.e('Base URL: $url');
+      
+      // Provide more detailed error information
+      String errorMessage = e.toString();
+      if (e.toString().contains('Connection refused') || e.toString().contains('port')) {
+        errorMessage += '\n\n⚠️ Troubleshooting:\n'
+            '• Check if device has proxy/VPN enabled (Settings → Network)\n'
+            '• Try disabling VPN/proxy temporarily\n'
+            '• Ensure device has internet connectivity\n'
+            '• Verify backend is accessible: https://wardrope-ai-backend.vercel.app/health';
+      }
+      
       return {
         'success': false,
-        'error': e.toString(),
+        'error': errorMessage,
+        'url': fullUrl,
       };
     }
   }
