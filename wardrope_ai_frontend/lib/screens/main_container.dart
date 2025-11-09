@@ -120,6 +120,7 @@ class _MainContainerState extends State<MainContainer>
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
             children: [

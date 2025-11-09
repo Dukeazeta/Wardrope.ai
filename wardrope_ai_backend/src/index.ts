@@ -74,7 +74,7 @@ app.use('/api', routes);
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler - Fixed to use proper regex pattern
+// 404 handler
 app.use((req: Request, res: Response<ErrorResponse>) => {
   res.status(404).json({
     error: 'Route not found',

@@ -17,6 +17,7 @@ class ClothingItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final cardColor = theme.cardTheme.color ?? (isDark ? const Color(0xFF1E1E1E) : Colors.white);
@@ -27,11 +28,14 @@ class ClothingItemCard extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.05)
         : Colors.black.withValues(alpha: 0.05);
 
+=======
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         decoration: BoxDecoration(
+<<<<<<< HEAD
           color: cardColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusM),
           boxShadow: [
@@ -39,12 +43,23 @@ class ClothingItemCard extends StatelessWidget {
               color: isDark
                   ? Colors.black.withValues(alpha: 0.3)
                   : Colors.black.withValues(alpha: 0.1),
+=======
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.radiusM),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               blurRadius: 10,
               offset: Offset(0, 4.h),
             ),
           ],
           border: Border.all(
+<<<<<<< HEAD
             color: borderColor,
+=======
+            color: Colors.black.withValues(alpha: 0.1),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
             width: 1,
           ),
         ),
@@ -56,7 +71,11 @@ class ClothingItemCard extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
+<<<<<<< HEAD
                   color: imageBgColor,
+=======
+                  color: Colors.black.withValues(alpha: 0.05),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(AppTheme.radiusM),
                   ),
@@ -70,12 +89,20 @@ class ClothingItemCard extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
+<<<<<<< HEAD
                         color: imageBgColor,
+=======
+                        color: Colors.black.withValues(alpha: 0.05),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                         child: Center(
                           child: Icon(
                             Icons.image_outlined,
                             size: AppTheme.iconXL,
+<<<<<<< HEAD
                             color: isDark ? Colors.grey.shade400 : Colors.grey,
+=======
+                            color: Colors.grey,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                           ),
                         ),
                       );
@@ -89,7 +116,11 @@ class ClothingItemCard extends StatelessWidget {
                                   loadingProgress.expectedTotalBytes!
                               : null,
                           valueColor: AlwaysStoppedAnimation<Color>(
+<<<<<<< HEAD
                             theme.colorScheme.primary,
+=======
+                            Colors.black.withValues(alpha: 0.3),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                           ),
                         ),
                       );
@@ -111,7 +142,11 @@ class ClothingItemCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: AppTheme.titleMediumFontSize,
                         fontWeight: FontWeight.w600,
+<<<<<<< HEAD
                         color: theme.textTheme.bodyLarge?.color ?? Colors.black,
+=======
+                        color: Colors.black,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -120,7 +155,11 @@ class ClothingItemCard extends StatelessWidget {
                       item.category,
                       style: TextStyle(
                         fontSize: AppTheme.bodySmallFontSize,
+<<<<<<< HEAD
                         color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+=======
+                        color: Colors.grey.shade600,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                         fontWeight: FontWeight.w400,
                       ),
                       maxLines: 1,

@@ -40,7 +40,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
 
       if (result['success']) {
         final models = result['data'];
-        
+
         // Ensure models is a List and convert to List<ModelData>
         List<ModelData> userModels;
         if (models is List) {
@@ -341,11 +341,11 @@ class ModelData {
     final modelType = json['modelType'] ?? json['model_type'] ?? 'user';
     final status = json['status'] ?? json['processing_status'] ?? 'pending';
     final metadata = json['metadata'] as Map<String, dynamic>?;
-    
+
     // Parse dates - handle both ISO strings and DateTime objects
     DateTime createdAt;
     DateTime updatedAt;
-    
+
     try {
       if (json['createdAt'] is String) {
         createdAt = DateTime.parse(json['createdAt']);
@@ -361,7 +361,7 @@ class ModelData {
     } catch (e) {
       createdAt = DateTime.now();
     }
-    
+
     try {
       if (json['updatedAt'] is String) {
         updatedAt = DateTime.parse(json['updatedAt']);
@@ -377,7 +377,7 @@ class ModelData {
     } catch (e) {
       updatedAt = DateTime.now();
     }
-    
+
     return ModelData(
       id: id,
       userId: userId?.toString(),

@@ -1,12 +1,11 @@
 import { Router } from 'express';
-// Legacy routes (commented out for hybrid architecture)
-// import authRoutes from './auth';
-// import userRoutes from './users';
-// import wardrobeRoutes from './wardrobe';
-// import modelRoutes from './model';
-// import imageRoutes from './image';
-// import outfitRoutes from './outfits';
-// import aiStylistRoutes from './ai-stylist';
+import authRoutes from './auth';
+import userRoutes from './users';
+import wardrobeRoutes from './wardrobe';
+import modelRoutes from './model';
+import imageRoutes from './image';
+import outfitRoutes from './outfits';
+import aiStylistRoutes from './ai-stylist';
 import simplifiedAIRoutes from './simplified-ai';
 import localStorageRoutes from './local-storage';
 
@@ -34,7 +33,15 @@ router.get('/version', (req, res) => {
   });
 });
 
-// Hybrid Architecture Routes Only
+// Mount route modules
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+router.use('/wardrobe', wardrobeRoutes);
+router.use('/model', modelRoutes);
+router.use('/image', imageRoutes);
+router.use('/outfits', outfitRoutes);
+router.use('/ai-stylist', aiStylistRoutes);
+// Hybrid Architecture Routes
 router.use('/simplified-ai', simplifiedAIRoutes);
 router.use('/local', localStorageRoutes);
 

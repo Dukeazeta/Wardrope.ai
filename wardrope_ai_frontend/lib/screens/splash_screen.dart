@@ -13,6 +13,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+<<<<<<< HEAD
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
@@ -95,6 +96,14 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Complete and navigate after animations
     Future.delayed(const Duration(milliseconds: 2500), () {
+=======
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Simple delay without animation
+    Future.delayed(const Duration(seconds: 2), () {
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
       if (mounted) {
         widget.onAnimationComplete();
       }
@@ -102,6 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
+<<<<<<< HEAD
   void dispose() {
     _fadeController.dispose();
     _scaleController.dispose();
@@ -185,6 +195,31 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               );
             },
+=======
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8F9FA),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            'Wardrope.ai',
+            style: TextStyle(
+              fontSize: AppTheme.displayLargeFontSize,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              letterSpacing: -1.2,
+            ),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
           ),
         ),
       ),

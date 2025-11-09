@@ -12,10 +12,17 @@ import 'package:warddropeai/main.dart';
 void main() {
   testWidgets('Onboarding screen smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
+<<<<<<< HEAD
     await tester.pumpWidget(const WardrobeApp());
 
     // Verify that onboarding screen is displayed
     expect(find.text('Welcome to Wardrobe.ai'), findsOneWidget);
+=======
+    await tester.pumpWidget(const WardropeApp());
+
+    // Verify that onboarding screen is displayed
+    expect(find.text('Welcome to Wardrope.ai'), findsOneWidget);
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     expect(find.text('Your AI-powered fashion companion'), findsOneWidget);
   });
 }

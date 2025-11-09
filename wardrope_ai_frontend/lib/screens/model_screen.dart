@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+<<<<<<< HEAD
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -12,6 +13,12 @@ import '../bloc/model/model_state_updated.dart';
 import '../bloc/model/model_event_updated.dart';
 import '../theme/app_theme.dart';
 import '../utils/theme_aware_image.dart';
+=======
+import 'dart:convert';
+import 'dart:io';
+import '../bloc/model/model_bloc.dart';
+import '../services/model_service.dart';
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
 
 class ModelScreen extends StatefulWidget {
   const ModelScreen({super.key});
@@ -105,9 +112,12 @@ class _ModelScreenState extends State<ModelScreen> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = theme.textTheme.headlineLarge?.color ?? Colors.black;
+=======
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomNavHeight = 92.h; // Height of bottom navbar from your design
     final availableHeight = screenHeight - bottomNavHeight;
@@ -123,6 +133,10 @@ class _ModelScreenState extends State<ModelScreen> {
       child: BlocBuilder<ModelBloc, ModelState>(
         builder: (context, state) {
           return Scaffold(
+<<<<<<< HEAD
+=======
+            backgroundColor: Colors.white,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
             body: SafeArea(
               child: Column(
                 children: [
@@ -134,10 +148,17 @@ class _ModelScreenState extends State<ModelScreen> {
                       children: [
                         Text(
                           'Your Model',
+<<<<<<< HEAD
                           style: AppTheme.primaryFont.copyWith(
                             color: textColor,
                             fontSize: AppTheme.headlineLargeFontSize,
                             fontWeight: FontWeight.w600,
+=======
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.bold,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                           ),
                         ),
                         if (state.hasModel)
@@ -147,7 +168,11 @@ class _ModelScreenState extends State<ModelScreen> {
                             },
                             icon: Icon(
                               Icons.edit_outlined,
+<<<<<<< HEAD
                               color: textColor,
+=======
+                              color: Colors.black,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                               size: 24.sp,
                             ),
                           ),
@@ -161,9 +186,13 @@ class _ModelScreenState extends State<ModelScreen> {
                       width: double.infinity,
                       height: availableHeight - 80.h, // Account for header and CTA button
                       decoration: BoxDecoration(
+<<<<<<< HEAD
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.02)
                             : Colors.black.withValues(alpha: 0.02),
+=======
+                        color: Colors.black.withValues(alpha: 0.02),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                       ),
                       child: _buildModelDisplay(state),
                     ),
@@ -172,6 +201,7 @@ class _ModelScreenState extends State<ModelScreen> {
                   // CTA Button Area
                   Container(
                     decoration: BoxDecoration(
+<<<<<<< HEAD
                       color: isDark
                           ? Colors.black.withValues(alpha: 0.95)
                           : Colors.white.withValues(alpha: 0.95),
@@ -180,6 +210,12 @@ class _ModelScreenState extends State<ModelScreen> {
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.1)
                               : Colors.black.withValues(alpha: 0.1),
+=======
+                      color: Colors.white.withValues(alpha: 0.95),
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.black.withValues(alpha: 0.1),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                           width: 1,
                         ),
                       ),
@@ -197,8 +233,11 @@ class _ModelScreenState extends State<ModelScreen> {
   }
 
   Widget _buildModelDisplay(ModelState state) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
 
+=======
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     // Show loading indicator
     if (state.isLoading) {
       return Center(
@@ -206,15 +245,25 @@ class _ModelScreenState extends State<ModelScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
+<<<<<<< HEAD
               color: theme.colorScheme.primary,
+=======
+              color: Colors.black,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               strokeWidth: 2,
             ),
             SizedBox(height: 16.h),
             Text(
               'Processing your model...',
+<<<<<<< HEAD
               style: AppTheme.primaryFont.copyWith(
                 fontSize: AppTheme.bodyLargeFontSize,
                 color: theme.textTheme.bodyMedium?.color,
+=======
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey.shade600,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               ),
             ),
           ],
@@ -224,6 +273,7 @@ class _ModelScreenState extends State<ModelScreen> {
 
     // Show outfit on model if available
     if (state.hasOutfit && state.currentOutfitImage != null) {
+<<<<<<< HEAD
       return _buildImageDisplay(state.currentOutfitImage!, state.currentModel);
     }
 
@@ -239,12 +289,21 @@ class _ModelScreenState extends State<ModelScreen> {
       } else {
         debugPrint('Model image URL is empty');
       }
+=======
+      return _buildImageDisplay(state.currentOutfitImage!);
+    }
+
+    // Show processed model if available
+    if (state.hasModel && state.currentModel?.processedImageUrl != null) {
+      return _buildImageDisplay(state.currentModel!.processedImageUrl!);
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     }
 
     // Show placeholder if no model
     return _buildPlaceholderDisplay();
   }
 
+<<<<<<< HEAD
   Widget _buildImageDisplay(String imageUrl, [ModelData? modelData]) {
     // Check if it's a data URL (base64)
     if (imageUrl.startsWith('data:')) {
@@ -268,13 +327,26 @@ class _ModelScreenState extends State<ModelScreen> {
     }
     // Otherwise treat as asset
     else {
+=======
+  Widget _buildImageDisplay(String imageUrl) {
+    // Check if it's a data URL (base64) or file path
+    if (imageUrl.startsWith('data:')) {
+      return _buildBase64Image(imageUrl);
+    } else if (imageUrl.startsWith('/')) {
+      return _buildFileImage(imageUrl);
+    } else {
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
       return _buildAssetImage(imageUrl);
     }
   }
 
   Widget _buildBase64Image(String base64Url) {
     try {
+<<<<<<< HEAD
       final pureBase64 = _extractBase64FromDataUrl(base64Url);
+=======
+      final pureBase64 = ModelService.extractBase64FromDataUrl(base64Url);
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
 
       return Image.memory(
         const Base64Decoder().convert(pureBase64),
@@ -289,6 +361,7 @@ class _ModelScreenState extends State<ModelScreen> {
     }
   }
 
+<<<<<<< HEAD
   Widget _buildFileImage(String filePath, [ModelData? modelData]) {
     final file = File(filePath);
     
@@ -399,6 +472,15 @@ class _ModelScreenState extends State<ModelScreen> {
         debugPrint('Error loading network image: $error');
         debugPrint('Image URL: $imageUrl');
         return _buildErrorDisplay('Failed to load image from network');
+=======
+  Widget _buildFileImage(String filePath) {
+    return Image.file(
+      File(filePath),
+      fit: BoxFit.contain,
+      alignment: Alignment.center,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildErrorDisplay('Failed to load model image');
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
       },
     );
   }
@@ -418,9 +500,14 @@ class _ModelScreenState extends State<ModelScreen> {
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.zero,
+<<<<<<< HEAD
         child: ThemeAwareImage.build(
           context: context,
           assetPath: 'assets/Model.png',
+=======
+        child: Image.asset(
+          'assets/Model.png',
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
           width: double.infinity,
           height: double.infinity,
           fit: BoxFit.cover,
@@ -457,7 +544,11 @@ class _ModelScreenState extends State<ModelScreen> {
           SizedBox(height: 16.h),
           Text(
             message,
+<<<<<<< HEAD
             style: AppTheme.primaryFont.copyWith(
+=======
+            style: TextStyle(
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               fontSize: 16.sp,
               color: Colors.red,
             ),
@@ -469,6 +560,7 @@ class _ModelScreenState extends State<ModelScreen> {
   }
 
   Widget _buildActionButtons(ModelState state) {
+<<<<<<< HEAD
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black;
@@ -477,6 +569,8 @@ class _ModelScreenState extends State<ModelScreen> {
         : Colors.black.withValues(alpha: 0.2);
     final containerColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
+=======
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
     // Don't show upload buttons if user has a model and is viewing an outfit
     if (state.hasOutfit) {
       return Column(
@@ -491,6 +585,7 @@ class _ModelScreenState extends State<ModelScreen> {
                 context.read<ModelBloc>().add(OutfitClearRequested());
               },
               style: ElevatedButton.styleFrom(
+<<<<<<< HEAD
                 backgroundColor: isDark ? Colors.white : Colors.black,
                 foregroundColor: isDark ? Colors.black : Colors.white,
                 shape: RoundedRectangleBorder(
@@ -502,6 +597,18 @@ class _ModelScreenState extends State<ModelScreen> {
               child: Text(
                 'Remove Outfit',
                 style: AppTheme.primaryFont.copyWith(
+=======
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r),
+                ),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Remove Outfit',
+                style: TextStyle(
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -522,6 +629,7 @@ class _ModelScreenState extends State<ModelScreen> {
           child: ElevatedButton(
             onPressed: (state.isLoading) ? null : _takePhoto,
             style: ElevatedButton.styleFrom(
+<<<<<<< HEAD
               backgroundColor: isDark ? Colors.white : Colors.black,
               foregroundColor: isDark ? Colors.black : Colors.white,
               shape: RoundedRectangleBorder(
@@ -530,6 +638,15 @@ class _ModelScreenState extends State<ModelScreen> {
               elevation: isDark ? 2 : 0,
               shadowColor: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.transparent,
               disabledBackgroundColor: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5),
+=======
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24.r),
+              ),
+              elevation: 0,
+              disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
             ),
             child: state.isLoading
                 ? SizedBox(
@@ -537,12 +654,20 @@ class _ModelScreenState extends State<ModelScreen> {
                     height: 20.h,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
+<<<<<<< HEAD
                       valueColor: AlwaysStoppedAnimation<Color>(isDark ? Colors.black : Colors.white),
+=======
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                     ),
                   )
                 : Text(
                     state.hasModel ? 'Retake Photo' : 'Take Photo',
+<<<<<<< HEAD
                     style: AppTheme.primaryFont.copyWith(
+=======
+                    style: const TextStyle(
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -554,15 +679,26 @@ class _ModelScreenState extends State<ModelScreen> {
           width: double.infinity,
           height: 48.h,
           decoration: BoxDecoration(
+<<<<<<< HEAD
             color: containerColor,
             borderRadius: BorderRadius.circular(24.r),
             border: Border.all(
               color: borderColor,
+=======
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24.r),
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.2),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
+<<<<<<< HEAD
                 color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+=======
+                color: Colors.black.withValues(alpha: 0.05),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                 blurRadius: 10,
                 offset: Offset(0, 4.h),
               ),
@@ -572,7 +708,11 @@ class _ModelScreenState extends State<ModelScreen> {
             onPressed: (state.isLoading) ? null : _pickFromGallery,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
+<<<<<<< HEAD
               foregroundColor: textColor,
+=======
+              foregroundColor: Colors.black,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24.r),
@@ -585,15 +725,25 @@ class _ModelScreenState extends State<ModelScreen> {
                 Icon(
                   Icons.photo_library_outlined,
                   size: 20.sp,
+<<<<<<< HEAD
                   color: textColor.withValues(alpha: 0.7),
+=======
+                  color: Colors.black.withValues(alpha: 0.7),
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                 ),
                 SizedBox(width: 8.w),
                 Text(
                   state.hasModel ? 'Change Model' : 'Upload from Gallery',
+<<<<<<< HEAD
                   style: AppTheme.primaryFont.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: textColor,
+=======
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
                   ),
                 ),
               ],
@@ -603,6 +753,7 @@ class _ModelScreenState extends State<ModelScreen> {
       ],
     );
   }
+<<<<<<< HEAD
 
   // Helper method to extract base64 from data URL
   String _extractBase64FromDataUrl(String dataUrl) {
@@ -647,4 +798,6 @@ class _ModelScreenState extends State<ModelScreen> {
       rethrow;
     }
   }
+=======
+>>>>>>> a383de17757c823bdb4441debf3917d342ff8b19
 }
