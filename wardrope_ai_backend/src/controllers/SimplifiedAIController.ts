@@ -44,7 +44,10 @@ export class SimplifiedAIController {
    */
   async processModel(req: Request, res: Response): Promise<void> {
     try {
+      console.log('🚀 Starting model processing request');
+
       if (!req.file) {
+        console.log('❌ No file provided in request');
         res.status(400).json({
           success: false,
           message: 'No image file provided'
@@ -58,15 +61,20 @@ export class SimplifiedAIController {
         upscale: req.body.upscale === 'true'
       };
 
+      console.log('🔧 Initializing AI service...');
       const aiService = hybridAIService();
+
       // Handle both memory storage (Vercel) and disk storage (local)
       // In Vercel/serverless, req.file.buffer is available; in local dev, req.file.path is used
       const imageInput = (req.file as any).buffer ? (req.file as any).buffer : req.file.path;
 
-      console.log('Processing model with options:', options);
-      console.log('Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
-      console.log('Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
+      console.log('📸 Processing model with options:', options);
+      console.log('📊 Image input type:', Buffer.isBuffer(imageInput) ? 'Buffer' : 'File path');
+      console.log('📏 Image size:', Buffer.isBuffer(imageInput) ? imageInput.length : 'N/A');
+      console.log('🏷️  File originalname:', req.file.originalname);
+      console.log('📝 File mimetype:', req.file.mimetype);
 
+      console.log('🤖 Calling AI service...');
       const result = await aiService.processUserModel(imageInput, options);
 
       if (result.success) {
@@ -131,11 +139,36 @@ export class SimplifiedAIController {
         });
       }
     } catch (error: any) {
-      console.error('Error processing model:', error);
+      console.error('💥 Error processing model:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+        status: error.status
+      });
+
+      // Check for specific error types
+      if (error.message?.includes('GEMINI_API_KEY')) {
+        res.status(500).json({
+          success: false,
+          message: 'AI service configuration error',
+          error: 'Gemini API key is missing or invalid'
+        });
+        return;
+      }
+
+      if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+        res.status(429).json({
+          success: false,
+          message: 'AI service temporarily unavailable',
+          error: 'Rate limit exceeded. Please try again later.'
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message: 'Internal server error',
-        error: error.message
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Failed to process model'
       });
     }
   }

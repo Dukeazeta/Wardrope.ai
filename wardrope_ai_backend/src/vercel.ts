@@ -87,9 +87,29 @@ let servicesInitialized = false;
 async function ensureServicesInitialized() {
   if (!servicesInitialized) {
     try {
-      await hybridSQLiteService.initialize();
-      console.log('✅ Hybrid SQLite database initialized');
+      // Skip SQLite in Vercel serverless environment - use Supabase instead
+      const isVercel = process.env.VERCEL === '1' ||
+                     process.env.VERCEL_ENV !== undefined ||
+                     process.cwd().startsWith('/var/task');
+
+      if (isVercel) {
+        console.log('⚠️ Running in Vercel serverless - skipping SQLite, using Supabase only');
+      } else {
+        // Only initialize SQLite in local development
+        await hybridSQLiteService.initialize();
+        console.log('✅ Hybrid SQLite database initialized');
+      }
+
+      // Validate required environment variables
+      const requiredEnvVars = ['GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'];
+      const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+      if (missingVars.length > 0) {
+        throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+      }
+
       servicesInitialized = true;
+      console.log('✅ Services initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize services:', error);
       throw error;
